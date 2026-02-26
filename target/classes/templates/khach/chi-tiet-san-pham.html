@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${sanPham.tenSanPham + ' - Certain Shop'}">Chi tiết sản phẩm</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body class="bg-light">
+
+<div th:replace="~{fragments/layout :: header}"></div>
+
+<main class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/}" class="text-danger text-decoration-none">Trang chủ</a></li>
+            <li class="breadcrumb-item">
+                <a th:href="@{'/danh-muc/' + ${sanPham.danhMuc?.duongDan}}"
+                   th:text="${sanPham.danhMuc?.tenDanhMuc}" class="text-danger text-decoration-none">Danh mục</a>
+            </li>
+            <li class="breadcrumb-item active" th:text="${sanPham.tenSanPham}">Sản phẩm</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- ẢNH SẢN PHẨM -->
+        <div class="col-md-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-2">
+                    <div class="main-img-wrapper mb-2" style="height:380px;overflow:hidden;border-radius:8px">
+                        <img id="anhChinh"
+                             th:src="${bienTheChon != null and bienTheChon.anhChinh != null ?
+                                 '/uploads/' + bienTheChon.anhChinh.duongDanAnh : '/img/no-image.png'}"
+                             th:alt="${sanPham.tenSanPham}"
+                             class="w-100 h-100" style="object-fit:cover"/>
+                    </div>
+                    <!-- Thumbnail ảnh -->
+                    <div class="d-flex gap-2 overflow-auto py-1" id="anhThumbs" th:if="${bienTheChon != null}">
+                        <img th:each="anh : ${bienTheChon.hinhAnh}"
+                             th:src="@{'/uploads/' + ${anh.duongDanAnh}}"
+                             class="rounded border cursor-pointer thumb-img"
+                             style="width:70px;height:70px;object-fit:cover;cursor:pointer"
+                             onclick="doiAnh(this.src)"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- THÔNG TIN SẢN PHẨM -->
+        <div class="col-md-7">
+            <h2 class="fw-bold mb-1" th:text="${sanPham.tenSanPham}">Tên sản phẩm</h2>
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <span class="text-warning">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-half"></i>
+                </span>
+                <span class="text-muted small">| Thương hiệu: <strong th:text="${sanPham.thuongHieu?.tenThuongHieu}">N/A</strong></span>
+            </div>
+
+            <div class="display-6 fw-bold text-danger mb-3" id="giaHienThi"
+                 th:text="${bienTheChon != null ?
+                     #numbers.formatInteger(bienTheChon.giaBan, 0, 'COMMA') + 'đ' : 'Liên hệ'}">
+                0đ
+            </div>
+
+            <!-- Chọn màu sắc -->
+            <div class="mb-3" th:if="${danhSachMauSac != null and !danhSachMauSac.isEmpty()}">
+                <label class="fw-semibold mb-2">Màu sắc:</label>
+                <div class="d-flex flex-wrap gap-2" id="chonMau">
+                    <button th:each="ms : ${danhSachMauSac}"
+                            type="button"
+                            class="btn btn-outline-secondary btn-sm color-btn"
+                            th:classappend="${bienTheChon != null and bienTheChon.mauSac?.id == ms.id} ? 'active btn-danger'"
+                            th:attr="data-mau-id=${ms.id}, data-mau-ten=${ms.tenMau}"
+                            th:text="${ms.tenMau}"
+                            onclick="chonMauSac(this)">
+                        Màu
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chọn kích thước -->
+            <div class="mb-3" th:if="${danhSachKichThuoc != null and !danhSachKichThuoc.isEmpty()}">
+                <label class="fw-semibold mb-2">Kích thước:</label>
+                <div class="d-flex flex-wrap gap-2" id="chonKichThuoc">
+                    <button th:each="kt : ${danhSachKichThuoc}"
+                            type="button"
+                            class="btn btn-outline-secondary size-btn"
+                            th:classappend="${bienTheChon != null and bienTheChon.kichThuoc?.id == kt.id} ? 'active btn-danger'"
+                            th:attr="data-kich-id=${kt.id}"
+                            th:text="${kt.kichCo}"
+                            onclick="chonKichThuoc(this)">
+                        S
+                    </button>
+                </div>
+                <a href="#" class="small text-muted mt-1 d-inline-block">
+                    <i class="bi bi-rulers me-1"></i>Hướng dẫn chọn size
+                </a>
+            </div>
+
+            <!-- Số lượng + Thêm giỏ hàng -->
+            <div class="row g-2 mb-3 align-items-center">
+                <div class="col-auto">
+                    <div class="input-group" style="width:130px">
+                        <button class="btn btn-outline-secondary" type="button" onclick="giamSoLuong()">-</button>
+                        <input type="number" class="form-control text-center" id="soLuong" value="1" min="1" max="5"/>
+                        <button class="btn btn-outline-secondary" type="button" onclick="tangSoLuong()">+</button>
+                    </div>
+                </div>
+                <div class="col">
+                    <span class="small text-muted" id="tonKho"
+                          th:text="${bienTheChon != null ? 'Còn ' + bienTheChon.soLuongTon + ' sản phẩm' : ''}">
+                    </span>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mb-4" sec:authorize="isAuthenticated()">
+                <button class="btn btn-danger btn-lg flex-fill" onclick="themVaoGioHang()">
+                    <i class="bi bi-cart-plus me-2"></i>Thêm vào giỏ hàng
+                </button>
+                <a th:href="@{/dat-hang}" class="btn btn-outline-danger btn-lg" id="muaNgayBtn">
+                    <i class="bi bi-lightning-fill me-1"></i>Mua ngay
+                </a>
+            </div>
+            <div sec:authorize="!isAuthenticated()" class="alert alert-warning">
+                <a th:href="@{/dang-nhap}" class="text-danger fw-bold">Đăng nhập</a> để mua hàng
+            </div>
+
+            <!-- Thông tin thêm -->
+            <div class="card border-0 bg-light p-3">
+                <div class="row g-2 small text-muted">
+                    <div class="col-6"><i class="bi bi-shield-check text-success me-1"></i>Hàng chính hãng</div>
+                    <div class="col-6"><i class="bi bi-truck text-primary me-1"></i>Giao hàng toàn quốc</div>
+                    <div class="col-6"><i class="bi bi-arrow-clockwise text-warning me-1"></i>Đổi trả 7 ngày</div>
+                    <div class="col-6"><i class="bi bi-chat-dots text-info me-1"></i>Hỗ trợ 24/7</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MÔ TẢ -->
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-white border-bottom-0 fw-bold fs-5">
+            <i class="bi bi-info-circle text-danger me-2"></i>Mô tả sản phẩm
+        </div>
+        <div class="card-body" th:utext="${sanPham.moTa}">Đang cập nhật...</div>
+    </div>
+
+    <!-- SẢN PHẨM LIÊN QUAN -->
+    <section class="mt-5" th:if="${sanPhamLienQuan != null and !sanPhamLienQuan.isEmpty()}">
+        <div class="d-flex align-items-center mb-3">
+            <div class="bg-danger text-white px-3 py-2 rounded-start fw-bold">SẢN PHẨM LIÊN QUAN</div>
+            <div class="flex-fill border-bottom border-danger border-2 ms-2"></div>
+        </div>
+        <div class="row g-3">
+            <div th:each="sp : ${sanPhamLienQuan}" class="col-6 col-md-3">
+                <div class="card h-100 border-0 shadow-sm product-card">
+                    <a th:href="@{'/san-pham/' + ${sp.id}}">
+                        <img th:if="${sp.bienThe != null and !sp.bienThe.isEmpty() and sp.bienThe[0].anhChinh != null}"
+                             th:src="@{'/uploads/' + ${sp.bienThe[0].anhChinh.duongDanAnh}}"
+                             class="card-img-top" style="height:200px;object-fit:cover"/>
+                        <img th:unless="${sp.bienThe != null and !sp.bienThe.isEmpty() and sp.bienThe[0].anhChinh != null}"
+                             th:src="@{/img/no-image.png}" class="card-img-top" style="height:200px;object-fit:cover"/>
+                    </a>
+                    <div class="card-body p-3">
+                        <h6 class="card-title text-truncate">
+                            <a th:href="@{'/san-pham/' + ${sp.id}}" th:text="${sp.tenSanPham}"
+                               class="text-dark text-decoration-none">Tên</a>
+                        </h6>
+                        <span class="text-danger fw-bold small"
+                              th:text="${sp.bienThe != null and !sp.bienThe.isEmpty() ?
+                                  #numbers.formatInteger(sp.bienThe[0].giaBan, 0, 'COMMA') + 'đ' : ''}">0đ</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+<script th:inline="javascript">
+    const sanPhamId = [[${sanPham.id}]];
+    let bienTheId = [[${bienTheChon?.id}]];
+    const bienTheList = [[${bienTheJson}]]; // JSON danh sách biến thể
+
+    function doiAnh(src) {
+        document.getElementById('anhChinh').src = src;
+    }
+
+    function chonMauSac(btn) {
+        document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active', 'btn-danger'));
+        btn.classList.add('active', 'btn-danger');
+        capNhatBienThe();
+    }
+
+    function chonKichThuoc(btn) {
+        document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active', 'btn-danger'));
+        btn.classList.add('active', 'btn-danger');
+        capNhatBienThe();
+    }
+
+    function capNhatBienThe() {
+        const mauId = document.querySelector('.color-btn.active')?.getAttribute('data-mau-id');
+        const kichId = document.querySelector('.size-btn.active')?.getAttribute('data-kich-id');
+        if (!bienTheList) return;
+        const bt = bienTheList.find(b =>
+            (!mauId || b.mauSacId == mauId) && (!kichId || b.kichThuocId == kichId)
+        );
+        if (bt) {
+            bienTheId = bt.id;
+            document.getElementById('giaHienThi').textContent = formatSo(bt.giaBan) + 'đ';
+            document.getElementById('tonKho').textContent = 'Còn ' + bt.soLuongTon + ' sản phẩm';
+        }
+    }
+
+    function tangSoLuong() {
+        const el = document.getElementById('soLuong');
+        if (parseInt(el.value) < 5) el.value = parseInt(el.value) + 1;
+    }
+
+    function giamSoLuong() {
+        const el = document.getElementById('soLuong');
+        if (parseInt(el.value) > 1) el.value = parseInt(el.value) - 1;
+    }
+
+    function themVaoGioHang() {
+        if (!bienTheId) { alert('Vui lòng chọn màu và kích thước'); return; }
+        const sl = parseInt(document.getElementById('soLuong').value);
+        fetch('/gio-hang/them', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCsrfToken()},
+            body: JSON.stringify({bienTheId: bienTheId, soLuong: sl})
+        }).then(r => r.json()).then(data => {
+            if (data.thanhCong) {
+                showToast('Đã thêm vào giỏ hàng thành công!', 'success');
+                // Cập nhật số lượng giỏ hàng
+                const badge = document.querySelector('.cart-badge');
+                if (badge && data.soLuongGioHang) badge.textContent = data.soLuongGioHang;
+            } else {
+                showToast(data.thongBao || 'Không thể thêm vào giỏ hàng', 'danger');
+            }
+        });
+    }
+
+    function formatSo(n) {
+        return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    function getCsrfToken() {
+        return document.cookie.split('; ').find(r => r.startsWith('XSRF-TOKEN'))?.split('=')[1] || '';
+    }
+
+    function showToast(msg, type) {
+        const div = document.createElement('div');
+        div.className = `toast-container position-fixed bottom-0 end-0 p-3`;
+        div.innerHTML = `<div class="toast show text-bg-${type} border-0"><div class="d-flex"><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div></div>`;
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 3000);
+    }
+</script>
+</body>
+</html>

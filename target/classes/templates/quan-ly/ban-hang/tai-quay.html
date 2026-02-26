@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Bán hàng tại quầy - Certain Shop</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+    <link rel="stylesheet" th:href="@{/css/admin.css}"/>
+</head>
+<body>
+<div class="d-flex">
+    <div th:replace="~{fragments/admin-layout :: adminSidebar}"></div>
+
+    <main class="flex-fill bg-light" style="min-height:100vh">
+        <div class="bg-dark text-white px-4 py-2 d-flex align-items-center justify-content-between">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-cash-register me-2 text-warning"></i>Bán hàng tại quầy</h5>
+            <button class="btn btn-success btn-sm" onclick="taoHoaDonMoi()">
+                <i class="bi bi-plus-circle me-1"></i>Tạo hóa đơn mới
+            </button>
+        </div>
+
+        <!-- Tabs hóa đơn chờ -->
+        <div class="bg-white border-bottom px-4 pt-2">
+            <ul class="nav nav-tabs" id="hoaDonTabs">
+                <li th:each="hd : ${danhSachHoaDonCho}" class="nav-item">
+                    <a class="nav-link d-flex align-items-center gap-2"
+                       th:id="'tab-' + ${hd.id}"
+                       th:classappend="${hoaDonDangChon != null and hoaDonDangChon.id == hd.id} ? 'active'"
+                       href="#"
+                       th:onclick="'chonHoaDon(' + ${hd.id} + ')'">
+                        <span th:text="${hd.maDonHang}">HD...</span>
+                        <button class="btn btn-sm p-0 ms-1 text-muted" style="line-height:1"
+                                th:onclick="'huyHoaDon(' + ${hd.id} + '); event.stopPropagation()'">&times;</button>
+                    </a>
+                </li>
+                <li th:if="${danhSachHoaDonCho == null or danhSachHoaDonCho.isEmpty()}"
+                    class="nav-item">
+                    <span class="nav-link text-muted disabled">Không có hóa đơn chờ</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="container-fluid p-4">
+            <div th:if="${danhSachHoaDonCho == null or danhSachHoaDonCho.isEmpty()}"
+                 class="text-center py-5">
+                <i class="bi bi-receipt text-muted" style="font-size:5rem"></i>
+                <h5 class="text-muted mt-3">Không có hóa đơn nào đang chờ</h5>
+                <button class="btn btn-success btn-lg mt-3" onclick="taoHoaDonMoi()">
+                    <i class="bi bi-plus-circle me-2"></i>Tạo hóa đơn mới
+                </button>
+            </div>
+
+            <div th:unless="${danhSachHoaDonCho == null or danhSachHoaDonCho.isEmpty()}" class="row g-4">
+                <!-- Tìm kiếm sản phẩm -->
+                <div class="col-lg-5">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white fw-bold border-bottom">
+                            <i class="bi bi-search text-primary me-2"></i>Tìm sản phẩm
+                        </div>
+                        <div class="card-body">
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" id="timSanPham"
+                                       placeholder="Tên sản phẩm, màu, size..." oninput="debounceTimSanPham(this.value)"/>
+                                <button class="btn btn-primary" type="button">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                            <div id="ketQuaTimKiem" class="list-group overflow-auto" style="max-height:500px"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hóa đơn hiện tại -->
+                <div class="col-lg-7">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white fw-bold border-bottom d-flex justify-content-between align-items-center">
+                            <span id="tenHoaDon">Hóa đơn #1</span>
+                            <span class="text-muted small" id="thoiGianHD"></span>
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table align-middle mb-0 small">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th class="text-center">Đơn giá</th>
+                                        <th class="text-center">SL</th>
+                                        <th class="text-end">Thành tiền</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="chiTietHoaDon">
+                                    <tr class="text-center text-muted">
+                                        <td colspan="5" class="py-4">Chưa có sản phẩm</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="card-footer bg-white">
+                            <!-- Voucher -->
+                            <div class="d-flex gap-2 mb-3">
+                                <input type="text" class="form-control form-control-sm" id="maVoucher" placeholder="Mã voucher"/>
+                                <button class="btn btn-outline-success btn-sm" onclick="apVoucher()">Áp dụng</button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="xoaVoucher()">Xóa</button>
+                            </div>
+
+                            <!-- Tóm tắt giá -->
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-muted">Tạm tính:</span>
+                                <span id="tamTinh">0đ</span>
+                            </div>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-muted">Giảm giá:</span>
+                                <span class="text-success" id="giamGia">-0đ</span>
+                            </div>
+                            <div class="d-flex justify-content-between fw-bold">
+                                <span>Tổng thanh toán:</span>
+                                <span class="text-danger fs-5" id="tongThanhToan">0đ</span>
+                            </div>
+
+                            <!-- Thanh toán -->
+                            <div class="mt-3 row g-2">
+                                <div class="col-md-6">
+                                    <select class="form-select form-select-sm" id="phuongThucTT">
+                                        <option value="TIEN_MAT">Tiền mặt</option>
+                                        <option value="CHUYEN_KHOAN">Chuyển khoản</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="number" class="form-control form-control-sm" id="tienKhachDua"
+                                           placeholder="Tiền khách đưa"/>
+                                </div>
+                                <div class="col-12">
+                                    <input type="text" class="form-control form-control-sm" id="tenKhach" placeholder="Tên khách hàng (tùy chọn)"/>
+                                </div>
+                                <div class="col-12 d-flex gap-2">
+                                    <button class="btn btn-success flex-fill fw-bold" onclick="thanhToan()">
+                                        <i class="bi bi-check-circle me-1"></i>Thanh toán
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="huyHoaDonHienTai()">
+                                        <i class="bi bi-x-circle me-1"></i>Hủy
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:inline="javascript">
+    let hoaDonHienTaiId = null;
+    let timKiemTimer = null;
+
+    // Chọn hóa đơn đầu tiên nếu có
+    const danhSachHD = /*[[${danhSachHoaDonCho}]]*/ [];
+    if (danhSachHD && danhSachHD.length > 0) {
+        chonHoaDon(danhSachHD[0].id);
+    }
+
+    async function taoHoaDonMoi() {
+        const res = await fetch('/quan-ly/ban-hang/tao-hoa-don', {
+            method: 'POST',
+            headers: {'X-CSRF-TOKEN': getCsrf()}
+        });
+        const data = await res.json();
+        if (data.thanhCong) {
+            location.reload();
+        } else {
+            alert(data.thongBao);
+        }
+    }
+
+    async function chonHoaDon(id) {
+        hoaDonHienTaiId = id;
+        // Cập nhật tab active
+        document.querySelectorAll('#hoaDonTabs .nav-link').forEach(t => t.classList.remove('active'));
+        const tab = document.getElementById('tab-' + id);
+        if (tab) tab.classList.add('active');
+
+        // Tải chi tiết
+        const res = await fetch('/quan-ly/ban-hang/' + id);
+        const data = await res.json();
+        if (data.thanhCong) {
+            renderHoaDon(data);
+        }
+    }
+
+    function renderHoaDon(data) {
+        document.getElementById('tenHoaDon').textContent = data.maHoaDon;
+        const tbody = document.getElementById('chiTietHoaDon');
+
+        if (!data.chiTiet || data.chiTiet.length === 0) {
+            tbody.innerHTML = '<tr class="text-center text-muted"><td colspan="5" class="py-4">Chưa có sản phẩm</td></tr>';
+        } else {
+            tbody.innerHTML = data.chiTiet.map(ct => `
+                <tr>
+                    <td>
+                        <img src="${ct.anhUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:4px" class="me-2"/>
+                        <div class="d-inline-block">
+                            <div class="fw-semibold">${ct.tenSanPham}</div>
+                            <small class="text-muted">${ct.kichThuoc} | ${ct.mauSac}</small>
+                        </div>
+                    </td>
+                    <td class="text-center">${formatSo(ct.donGia)}đ</td>
+                    <td class="text-center">
+                        <div class="input-group input-group-sm" style="width:100px">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="capNhatSoLuong(${ct.id}, ${ct.soLuong - 1})">-</button>
+                            <span class="form-control text-center">${ct.soLuong}</span>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="capNhatSoLuong(${ct.id}, ${ct.soLuong + 1})">+</button>
+                        </div>
+                    </td>
+                    <td class="text-end text-danger fw-bold">${formatSo(ct.thanhTien)}đ</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="xoaChiTiet(${ct.id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Cập nhật tổng tiền
+        const tong = data.tongTien || 0;
+        document.getElementById('tamTinh').textContent = formatSo(tong) + 'đ';
+        document.getElementById('tongThanhToan').textContent = formatSo(tong) + 'đ';
+    }
+
+    function debounceTimSanPham(q) {
+        clearTimeout(timKiemTimer);
+        if (q.length < 2) { document.getElementById('ketQuaTimKiem').innerHTML = ''; return; }
+        timKiemTimer = setTimeout(() => timSanPham(q), 400);
+    }
+
+    async function timSanPham(q) {
+        const res = await fetch('/quan-ly/ban-hang/tim-san-pham?q=' + encodeURIComponent(q));
+        const list = await res.json();
+        const el = document.getElementById('ketQuaTimKiem');
+        if (!list.length) {
+            el.innerHTML = '<div class="list-group-item text-muted small">Không tìm thấy sản phẩm</div>';
+            return;
+        }
+        el.innerHTML = list.map(bt => `
+            <div class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2"
+                 onclick="themSanPham(${bt.id})">
+                <img src="${bt.anhUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:4px"/>
+                <div class="flex-fill">
+                    <div class="small fw-semibold">${bt.tenSanPham}</div>
+                    <small class="text-muted">${bt.kichThuoc} | ${bt.mauSac} | Tồn: ${bt.soLuongTon}</small>
+                </div>
+                <div class="text-danger fw-bold small">${formatSo(bt.giaBan)}đ</div>
+            </div>
+        `).join('');
+    }
+
+    async function themSanPham(bienTheId) {
+        if (!hoaDonHienTaiId) { alert('Vui lòng chọn hoặc tạo hóa đơn'); return; }
+        const res = await fetch(`/quan-ly/ban-hang/${hoaDonHienTaiId}/them-san-pham`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-TOKEN': getCsrf()},
+            body: `bienTheId=${bienTheId}&soLuong=1`
+        });
+        const data = await res.json();
+        if (data.thanhCong) chonHoaDon(hoaDonHienTaiId);
+        else alert(data.thongBao);
+    }
+
+    async function capNhatSoLuong(chiTietId, sl) {
+        if (sl < 1) return;
+        const res = await fetch(`/quan-ly/ban-hang/chi-tiet/${chiTietId}/cap-nhat`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-TOKEN': getCsrf()},
+            body: `soLuong=${sl}`
+        });
+        const data = await res.json();
+        if (data.thanhCong) chonHoaDon(hoaDonHienTaiId);
+        else alert(data.thongBao);
+    }
+
+    async function xoaChiTiet(chiTietId) {
+        if (!confirm('Xóa sản phẩm này khỏi hóa đơn?')) return;
+        await fetch(`/quan-ly/ban-hang/chi-tiet/${chiTietId}/xoa`, {
+            method: 'POST', headers: {'X-CSRF-TOKEN': getCsrf()}
+        });
+        chonHoaDon(hoaDonHienTaiId);
+    }
+
+    async function apVoucher() {
+        const ma = document.getElementById('maVoucher').value.trim();
+        if (!ma) return;
+        const res = await fetch(`/quan-ly/ban-hang/${hoaDonHienTaiId}/ap-voucher`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-TOKEN': getCsrf()},
+            body: `maVoucher=${ma}`
+        });
+        const data = await res.json();
+        if (data.thanhCong) {
+            document.getElementById('giamGia').textContent = '-' + formatSo(data.soTienGiam) + 'đ';
+            document.getElementById('tongThanhToan').textContent = formatSo(data.tongSauGiam) + 'đ';
+            showToast(data.thongBao, 'success');
+        } else {
+            showToast(data.thongBao, 'danger');
+        }
+    }
+
+    async function xoaVoucher() {
+        await fetch(`/quan-ly/ban-hang/${hoaDonHienTaiId}/xoa-voucher`, {
+            method: 'POST', headers: {'X-CSRF-TOKEN': getCsrf()}
+        });
+        document.getElementById('giamGia').textContent = '-0đ';
+        chonHoaDon(hoaDonHienTaiId);
+    }
+
+    async function thanhToan() {
+        const pt = document.getElementById('phuongThucTT').value;
+        const tien = document.getElementById('tienKhachDua').value;
+        const ten = document.getElementById('tenKhach').value;
+        const res = await fetch(`/quan-ly/ban-hang/${hoaDonHienTaiId}/thanh-toan`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-TOKEN': getCsrf()},
+            body: `phuongThucThanhToan=${pt}&tienKhachDua=${tien}&tenKhach=${ten}`
+        });
+        const data = await res.json();
+        if (data.thanhCong) {
+            showToast('Thanh toán thành công!', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(data.thongBao, 'danger');
+        }
+    }
+
+    async function huyHoaDon(id) {
+        if (!confirm('Hủy hóa đơn này và hoàn kho?')) return;
+        await fetch(`/quan-ly/ban-hang/${id}/huy`, {
+            method: 'POST', headers: {'X-CSRF-TOKEN': getCsrf()}
+        });
+        location.reload();
+    }
+
+    function huyHoaDonHienTai() {
+        if (hoaDonHienTaiId) huyHoaDon(hoaDonHienTaiId);
+    }
+
+    function formatSo(n) {
+        return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    function getCsrf() {
+        const meta = document.querySelector('meta[name="_csrf"]');
+        if (meta) return meta.content;
+        return document.cookie.split('; ').find(r => r.startsWith('XSRF-TOKEN='))?.split('=')[1] || '';
+    }
+
+    function showToast(msg, type) {
+        const div = document.createElement('div');
+        div.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        div.innerHTML = `<div class="toast show text-bg-${type} border-0"><div class="d-flex"><div class="toast-body">${msg}</div><button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div></div>`;
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 3000);
+    }
+</script>
+</body>
+</html>

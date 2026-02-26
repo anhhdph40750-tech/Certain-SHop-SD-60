@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Thống kê doanh thu - Certain Shop</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+    <link rel="stylesheet" th:href="@{/css/admin.css}"/>
+</head>
+<body>
+<div class="d-flex">
+    <div th:replace="~{fragments/admin-layout :: adminSidebar}"></div>
+    <main class="flex-fill bg-light" style="min-height:100vh">
+        <div class="bg-dark text-white px-4 py-2">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-graph-up me-2 text-warning"></i>Thống kê doanh thu</h5>
+        </div>
+
+        <div class="container-fluid p-4">
+            <!-- Bộ lọc ngày -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <form method="get" action="/quan-ly/doanh-thu" class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Từ ngày</label>
+                            <input type="date" class="form-control" name="tuNgay" th:value="${tuNgay}"/>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Đến ngày</label>
+                            <input type="date" class="form-control" name="denNgay" th:value="${denNgay}"/>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Thống kê theo</label>
+                            <select class="form-select" name="loai">
+                                <option value="NGAY" th:selected="${loai=='NGAY'}">Ngày</option>
+                                <option value="THANG" th:selected="${loai=='THANG'}">Tháng</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search me-1"></i>Xem thống kê
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm bg-danger text-white">
+                        <div class="card-body">
+                            <div class="small mb-1">Tổng doanh thu</div>
+                            <div class="fs-4 fw-bold" th:text="${#numbers.formatDecimal(tongDoanhThu ?: 0, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm bg-primary text-white">
+                        <div class="card-body">
+                            <div class="small mb-1">Số đơn hàng</div>
+                            <div class="fs-4 fw-bold" th:text="${soDonHang ?: 0}">0</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm bg-success text-white">
+                        <div class="card-body">
+                            <div class="small mb-1">Đơn thành công</div>
+                            <div class="fs-4 fw-bold" th:text="${soDonThanhCong ?: 0}">0</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm bg-warning text-dark">
+                        <div class="card-body">
+                            <div class="small mb-1">Tỷ lệ thành công</div>
+                            <div class="fs-4 fw-bold" th:text="${soDonHang > 0} ? ${#numbers.formatDecimal(soDonThanhCong * 100.0 / soDonHang, 0, 'COMMA', 1, 'POINT')} + '%' : '0%'">0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Biểu đồ doanh thu -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white fw-bold border-bottom">
+                    <i class="bi bi-bar-chart me-2 text-primary"></i>Biểu đồ doanh thu
+                </div>
+                <div class="card-body">
+                    <canvas id="doanhThuChart" height="100"></canvas>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Top sản phẩm bán chạy -->
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white fw-bold border-bottom">
+                            <i class="bi bi-trophy text-warning me-2"></i>Top sản phẩm bán chạy
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table align-middle mb-0 small">
+                                <thead class="table-light">
+                                <tr><th>#</th><th>Sản phẩm</th><th class="text-center">Đã bán</th><th class="text-end">Doanh thu</th></tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="sp, stat : ${topSanPham}">
+                                    <td>
+                                        <span class="badge" th:classappend="${stat.index == 0} ? 'bg-warning text-dark' :
+                                            (${stat.index == 1}) ? 'bg-secondary' : 'bg-light text-dark border'" th:text="${stat.index + 1}">1</span>
+                                    </td>
+                                    <td th:text="${sp[0]}">Áo phông</td>
+                                    <td class="text-center fw-bold" th:text="${sp[1]}">100</td>
+                                    <td class="text-end text-danger" th:text="${#numbers.formatDecimal(sp[2], 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</td>
+                                </tr>
+                                <tr th:if="${topSanPham == null or topSanPham.empty}">
+                                    <td colspan="4" class="text-center text-muted py-3">Không có dữ liệu</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Đơn hàng theo trạng thái -->
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white fw-bold border-bottom">
+                            <i class="bi bi-pie-chart text-primary me-2"></i>Đơn hàng theo trạng thái
+                        </div>
+                        <div class="card-body">
+                            <canvas id="trangThaiChart" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script th:inline="javascript">
+    // Dữ liệu từ server
+    const nhans = /*[[${nhanDoanhThu}]]*/ [];
+    const giaTriDoanhThu = /*[[${giaTriDoanhThu}]]*/ [];
+    const trangThaiLabels = /*[[${trangThaiLabels}]]*/ ['Chờ xác nhận','Đang xử lý','Đã giao','Đã hủy'];
+    const trangThaiData = /*[[${trangThaiData}]]*/ [0, 0, 0, 0];
+
+    // Biểu đồ doanh thu
+    new Chart(document.getElementById('doanhThuChart'), {
+        type: 'bar',
+        data: {
+            labels: nhans,
+            datasets: [{
+                label: 'Doanh thu (đ)',
+                data: giaTriDoanhThu,
+                backgroundColor: 'rgba(220, 53, 69, 0.7)',
+                borderColor: '#dc3545',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: v => (v >= 1000000 ? (v / 1000000).toFixed(1) + 'tr' : (v >= 1000 ? (v/1000).toFixed(0) + 'k' : v)) + 'đ'
+                    }
+                }
+            }
+        }
+    });
+
+    // Biểu đồ trạng thái đơn
+    new Chart(document.getElementById('trangThaiChart'), {
+        type: 'doughnut',
+        data: {
+            labels: trangThaiLabels,
+            datasets: [{
+                data: trangThaiData,
+                backgroundColor: ['#0d6efd', '#ffc107', '#198754', '#dc3545', '#6c757d']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+</script>
+</body>
+</html>
