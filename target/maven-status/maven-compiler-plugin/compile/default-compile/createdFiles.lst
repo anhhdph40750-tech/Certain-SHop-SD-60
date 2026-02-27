@@ -20,6 +20,7 @@ com\certainshop\entity\HinhAnhBienThe.class
 com\certainshop\entity\KichThuoc$KichThuocBuilder.class
 com\certainshop\controller\api\QuanLyThongKeApiController.class
 com\certainshop\dto\DangKyDto.class
+com\certainshop\dto\GHNPhiVanChuyenDto$GHNPhiVanChuyenDtoBuilder.class
 com\certainshop\entity\BienThe.class
 com\certainshop\entity\DanhGia.class
 com\certainshop\service\DonHangService.class
@@ -34,8 +35,10 @@ com\certainshop\entity\GioHang$GioHangBuilder.class
 com\certainshop\controller\TaiKhoanController.class
 com\certainshop\repository\SanPhamRepository.class
 com\certainshop\dto\DangKyDto$DangKyDtoBuilder.class
+com\certainshop\dto\DiaChiChiTietDto.class
 com\certainshop\entity\DiaChiNguoiDung.class
 com\certainshop\dto\BienTheDto$BienTheDtoBuilder.class
+com\certainshop\dto\DiaChiChiTietDto$DiaChiChiTietDtoBuilder.class
 com\certainshop\config\BaoMatConfig.class
 com\certainshop\controller\api\DiaChiApiController.class
 com\certainshop\controller\quanly\DonHangQLController.class
@@ -58,6 +61,7 @@ com\certainshop\util\NguoiDungHienTai.class
 com\certainshop\service\GHNApiService.class
 com\certainshop\CertainShopApplication.class
 com\certainshop\service\KhuyenMaiService.class
+com\certainshop\dto\GHNPhiVanChuyenDto.class
 com\certainshop\controller\api\SanPhamApiController.class
 com\certainshop\controller\api\AuthApiController.class
 com\certainshop\controller\XacThucController.class

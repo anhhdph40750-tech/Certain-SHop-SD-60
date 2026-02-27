@@ -21,6 +21,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -199,6 +201,56 @@ public class DonHangApiController {
             return ResponseEntity.ok(ApiResponse.ok("Mã hợp lệ", result));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.loi(e.getMessage()));
+        }
+    }
+
+    // ===== VNPay Return Handler =====
+
+    @GetMapping("/vnpay-return")
+    public org.springframework.web.servlet.view.RedirectView vnPayReturn(@RequestParam Map<String, String> allParams) {
+        try {
+            // Xác thực chữ ký từ VNPay
+            boolean chuKyHopLe = vnPayUtil.xacThucChuKy(allParams);
+            String maDonHang = allParams.get("vnp_TxnRef");
+            String responseCode = allParams.get("vnp_ResponseCode");
+            String maGiaoDich = allParams.get("vnp_TransactionNo");
+            
+            // Build redirect URL to frontend
+            StringBuilder redirectUrl = new StringBuilder("http://localhost:5173/vnpay-return?");
+            
+            if (!chuKyHopLe) {
+                redirectUrl.append("status=error&message=Xác thực thanh toán thất bại");
+                return new org.springframework.web.servlet.view.RedirectView(redirectUrl.toString());
+            }
+
+            if ("00".equals(responseCode)) {
+                // Thanh toán thành công
+                DonHang donHang = donHangService.xacNhanThanhToanVNPay(maDonHang, maGiaoDich);
+                redirectUrl.append("status=success&maDonHang=").append(URLEncoder.encode(donHang.getMaDonHang(), StandardCharsets.UTF_8))
+                          .append("&donHangId=").append(donHang.getId())
+                          .append("&maGiaoDich=").append(maGiaoDich)
+                          .append("&tongTienThanhToan=").append(donHang.getTongTienThanhToan());
+            } else {
+                // Thanh toán thất bại hoặc bị hủy
+                String moTaLoi = switch (responseCode) {
+                    case "01" -> "Giao dịch bị từ chối";
+                    case "02" -> "Giao dịch bị hủy";
+                    case "04" -> "Giao dịch được định tuyến lại";
+                    case "05" -> "Giao dịch không được xử lý";
+                    case "06" -> "Giao dịch đã được hoàn tiền";
+                    case "07" -> "Giao dịch được khách hàng hủy";
+                    case "09" -> "Giao dịch bị từ chối - Không phát hiện được";
+                    default -> "Thanh toán không thành công (Mã lỗi: " + responseCode + ")";
+                };
+                redirectUrl.append("status=error&message=").append(URLEncoder.encode(moTaLoi, StandardCharsets.UTF_8))
+                          .append("&maDonHang=").append(maDonHang);
+            }
+            
+            return new org.springframework.web.servlet.view.RedirectView(redirectUrl.toString());
+        } catch (Exception e) {
+            String redirectUrl = "http://localhost:5173/vnpay-return?status=error&message=" + 
+                                URLEncoder.encode("Lỗi hệ thống: " + e.getMessage(), StandardCharsets.UTF_8);
+            return new org.springframework.web.servlet.view.RedirectView(redirectUrl);
         }
     }
 

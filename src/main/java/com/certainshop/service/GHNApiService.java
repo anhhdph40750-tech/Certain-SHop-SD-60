@@ -8,18 +8,20 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClientException;
 
 import java.math.BigDecimal;
 import java.util.*;
 
 /**
- * Service gọi API GHN - Giao Hàng Nhanh (môi trường dev)
+ * Service gọi API GHN - Giao Hàng Nhanh
+ * Production URL: https://online-gateway.ghn.vn
  */
 @Service
 @Slf4j
 public class GHNApiService {
 
-    @Value("${ghn.apiUrl:https://dev-online-gateway.ghn.vn}")
+    @Value("${ghn.apiUrl:https://online-gateway.ghn.vn}")
     private String apiUrl;
 
     @Value("${ghn.token:}")
@@ -27,6 +29,12 @@ public class GHNApiService {
 
     @Value("${ghn.shopId:}")
     private String shopId;
+
+    @Value("${ghn.warehouseDistrictId:1542}")
+    private Integer warehouseDistrictId; // Kho hàng (mặc định Hà Đông, Hà Nội)
+
+    @Value("${ghn.warehouseWardCode:20314}")
+    private String warehouseWardCode; // Phường kho hàng
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -121,35 +129,103 @@ public class GHNApiService {
 
     /**
      * Tính phí vận chuyển GHN
+     * @param maHuyenNhan ID quận/huyện người nhận
+     * @param maXaNhan Code phường/xã người nhận (format theo GHN)
+     * @param tongKhoiLuongGram Trọng lượng (gram)
+     * @return Phí vận chuyển tính từ kho
      */
     public BigDecimal tinhPhiVanChuyen(int maHuyenNhan, String maXaNhan, int tongKhoiLuongGram) {
         try {
             String url = apiUrl + "/shiip/public-api/v2/shipping-order/fee";
             HttpHeaders headers = taoHeadersVoiShopId();
 
-            Map<String, Object> body = new HashMap<>();
-            body.put("service_type_id", 2); // Express
+            // Nếu trọng lượng = 0, tính mặc định 500g
+            int khoiLuong = tongKhoiLuongGram > 0 ? tongKhoiLuongGram : 500;
+
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("service_type_id", 2); // 2 = Standard (dùng service_type_id thay vì service_id)
+            body.put("from_district_id", warehouseDistrictId); // Kho hàng
+            body.put("from_ward_code", warehouseWardCode);
             body.put("to_district_id", maHuyenNhan);
             body.put("to_ward_code", maXaNhan);
-            body.put("weight", tongKhoiLuongGram);
-            body.put("length", 30);
+            body.put("weight", khoiLuong);
+            body.put("length", 30); // Kích thước box dự tính
             body.put("width", 20);
             body.put("height", 5);
-            body.put("insurance_value", 0);
+            body.put("insurance_value", 0); // Không bảo hiểm
+
+            log.info("GHN tính phí - Body: {}", body);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url, HttpMethod.POST,
+                    new HttpEntity<>(body, headers), String.class);
+
+            log.info("GHN response: {}", response.getBody());
+
+            JsonNode root = objectMapper.readTree(response.getBody());
+            
+            // Kiểm tra code = 200 (success)
+            int code = root.has("code") ? root.get("code").asInt() : -1;
+            if (code != 200) {
+                String message = root.has("message") ? root.get("message").asText() : "Unknown error";
+                log.warn("GHN API trả về lỗi: code={}, message={}", code, message);
+                return BigDecimal.valueOf(35000L); // Phí mặc định
+            }
+
+            if (root.has("data") && root.get("data").has("total")) {
+                long total = root.get("data").get("total").asLong();
+                log.info("GHN tính phí thành công: {}", total);
+                return BigDecimal.valueOf(total);
+            }
+
+            log.warn("GHN response không có trường 'total'");
+            return BigDecimal.valueOf(35000L); // Phí mặc định
+            
+        } catch (RestClientException e) {
+            log.error("Lỗi kết nối GHN: {}", e.getMessage());
+            return BigDecimal.valueOf(35000L); // Phí mặc định khi lỗi
+        } catch (Exception e) {
+            log.error("Lỗi tính phí GHN: {}", e.getMessage(), e);
+            return BigDecimal.valueOf(35000L); // Phí mặc định khi lỗi
+        }
+    }
+
+    /**
+     * Lấy danh sách dịch vụ khả dụng từ quận/huyện A đến B
+     * @param maHuyenGui ID quận/huyện gửi
+     * @param maHuyenNhan ID quận/huyện nhận
+     * @return Danh sách services
+     */
+    public List<Map<String, Object>> layDanhSachDichVu(int maHuyenGui, int maHuyenNhan) {
+        try {
+            String url = apiUrl + "/shiip/public-api/v2/shipping-order/available-services";
+            HttpHeaders headers = taoHeadersVoiShopId();
+
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("from_district_id", maHuyenGui);
+            body.put("to_district_id", maHuyenNhan);
 
             ResponseEntity<String> response = restTemplate.exchange(
                     url, HttpMethod.POST,
                     new HttpEntity<>(body, headers), String.class);
 
             JsonNode root = objectMapper.readTree(response.getBody());
-            if (root.has("data") && root.get("data").has("total")) {
-                return BigDecimal.valueOf(root.get("data").get("total").asLong());
+            List<Map<String, Object>> danhSach = new ArrayList<>();
+
+            if (root.has("data") && root.get("data").isArray()) {
+                for (JsonNode node : root.get("data")) {
+                    Map<String, Object> service = new HashMap<>();
+                    service.put("service_id", node.get("service_id").asInt());
+                    service.put("service_name", node.get("service_name").asText());
+                    service.put("service_type_id", node.get("service_type_id").asInt());
+                    danhSach.add(service);
+                }
             }
+            return danhSach;
         } catch (Exception e) {
-            log.warn("Không thể tính phí vận chuyển GHN: {}", e.getMessage());
+            log.warn("Không thể lấy danh sách dịch vụ từ GHN: {}", e.getMessage());
+            return new ArrayList<>();
         }
-        // Phí mặc định nếu API lỗi
-        return BigDecimal.valueOf(30000L);
     }
 
     private HttpHeaders taoHeaders() {

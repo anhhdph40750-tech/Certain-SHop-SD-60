@@ -1,3 +1,5 @@
+use certain_shop;
+
 DELETE FROM dbo.ChiTietDonHang
 WHERE BienTheId IN (
     SELECT Id FROM dbo.BienThe
