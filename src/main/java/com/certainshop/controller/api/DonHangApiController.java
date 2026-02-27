@@ -12,6 +12,7 @@ import com.certainshop.service.KhuyenMaiService;
 import com.certainshop.util.VNPayUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
+@Slf4j
 public class DonHangApiController {
 
     private final DonHangService donHangService;
@@ -209,48 +211,88 @@ public class DonHangApiController {
     @GetMapping("/vnpay-return")
     public org.springframework.web.servlet.view.RedirectView vnPayReturn(@RequestParam Map<String, String> allParams) {
         try {
-            // Xác thực chữ ký từ VNPay
-            boolean chuKyHopLe = vnPayUtil.xacThucChuKy(allParams);
             String maDonHang = allParams.get("vnp_TxnRef");
             String responseCode = allParams.get("vnp_ResponseCode");
             String maGiaoDich = allParams.get("vnp_TransactionNo");
             
+            log.info("[VNPay] Callback nhan duoc - Ma DH: {}, Code: {}, Giao dich: {}",
+                    maDonHang, responseCode, maGiaoDich);
+            
+            // Xac thuc chu ky tu VNPay
+            boolean chuKyHopLe = vnPayUtil.xacThucChuKy(allParams);
+            if (!chuKyHopLe) {
+                log.error("[VNPay] Xac thuc chu ky that bai - Ma DH: {}", maDonHang);
+                String redirectUrl = "http://localhost:5173/vnpay-return?status=error&message=" + 
+                                    URLEncoder.encode("Xac thuc thanh toan that bai (Chu ky khong hop le)", StandardCharsets.UTF_8);
+                return new org.springframework.web.servlet.view.RedirectView(redirectUrl);
+            }
+            
+            log.info("[VNPay] Xac thuc chu ky thanh cong - Ma DH: {}", maDonHang);
+            
             // Build redirect URL to frontend
             StringBuilder redirectUrl = new StringBuilder("http://localhost:5173/vnpay-return?");
             
-            if (!chuKyHopLe) {
-                redirectUrl.append("status=error&message=Xác thực thanh toán thất bại");
-                return new org.springframework.web.servlet.view.RedirectView(redirectUrl.toString());
-            }
-
             if ("00".equals(responseCode)) {
-                // Thanh toán thành công
-                DonHang donHang = donHangService.xacNhanThanhToanVNPay(maDonHang, maGiaoDich);
-                redirectUrl.append("status=success&maDonHang=").append(URLEncoder.encode(donHang.getMaDonHang(), StandardCharsets.UTF_8))
-                          .append("&donHangId=").append(donHang.getId())
-                          .append("&maGiaoDich=").append(maGiaoDich)
-                          .append("&tongTienThanhToan=").append(donHang.getTongTienThanhToan());
+                // Thanh toan thanh cong
+                log.info("[VNPay] Thanh toan thanh cong - Ma DH: {}", maDonHang);
+                try {
+                    DonHang donHang = donHangService.xacNhanThanhToanVNPay(maDonHang, maGiaoDich);
+                    log.info("[VNPay] Luu thanh toan vao DB - Ma DH: {}", maDonHang);
+                    redirectUrl.append("status=success&maDonHang=").append(URLEncoder.encode(donHang.getMaDonHang(), StandardCharsets.UTF_8))
+                              .append("&donHangId=").append(donHang.getId())
+                              .append("&maGiaoDich=").append(maGiaoDich)
+                              .append("&tongTienThanhToan=").append(donHang.getTongTienThanhToan());
+                } catch (IllegalStateException e) {
+                    // Da xu ly roi (idempotency)
+                    log.warn("[VNPay] Don hang da duoc xu ly: {} - {}", maDonHang, e.getMessage());
+                    redirectUrl.append("status=success&maDonHang=").append(URLEncoder.encode(maDonHang, StandardCharsets.UTF_8))
+                              .append("&maGiaoDich=").append(maGiaoDich)
+                              .append("&message=").append(URLEncoder.encode("Thanh toan da duoc xu ly truoc do", StandardCharsets.UTF_8));
+                } catch (Exception e) {
+                    log.error("[VNPay] Loi xu ly thanh toan - Ma DH: {}, Loi: {}", maDonHang, e.getMessage(), e);
+                    redirectUrl.append("status=error&message=").append(URLEncoder.encode("Loi xu ly thanh toan: " + e.getMessage(), StandardCharsets.UTF_8))
+                              .append("&maDonHang=").append(maDonHang);
+                }
             } else {
-                // Thanh toán thất bại hoặc bị hủy
+                // Thanh toan that bai hoac bi huy
                 String moTaLoi = switch (responseCode) {
-                    case "01" -> "Giao dịch bị từ chối";
-                    case "02" -> "Giao dịch bị hủy";
-                    case "04" -> "Giao dịch được định tuyến lại";
-                    case "05" -> "Giao dịch không được xử lý";
-                    case "06" -> "Giao dịch đã được hoàn tiền";
-                    case "07" -> "Giao dịch được khách hàng hủy";
-                    case "09" -> "Giao dịch bị từ chối - Không phát hiện được";
-                    default -> "Thanh toán không thành công (Mã lỗi: " + responseCode + ")";
+                    case "01" -> "Giao dich bi tu choi";
+                    case "02" -> "Giao dich bi huy";
+                    case "04" -> "Giao dich duoc dinh tuyen lai";
+                    case "05" -> "Giao dich khong duoc xu ly";
+                    case "06" -> "Giao dich da duoc hoan tien";
+                    case "07" -> "Giao dich bi khach hang huy";
+                    case "09" -> "Giao dich bi tu choi - Khong phat hien duoc";
+                    default -> "Thanh toan khong thanh cong (Ma loi: " + responseCode + ")";
                 };
+                log.warn("[VNPay] Thanh toan KHONG thanh cong - Ma DH: {}, Loi code: {}, Mo ta: {}",
+                        maDonHang, responseCode, moTaLoi);
                 redirectUrl.append("status=error&message=").append(URLEncoder.encode(moTaLoi, StandardCharsets.UTF_8))
                           .append("&maDonHang=").append(maDonHang);
             }
             
+            log.info("[VNPay] Chuyen huong ve frontend: {}", redirectUrl.toString());
             return new org.springframework.web.servlet.view.RedirectView(redirectUrl.toString());
+            
         } catch (Exception e) {
+            log.error("[VNPay] Loi xu ly VNPay callback: {}", e.getMessage(), e);
             String redirectUrl = "http://localhost:5173/vnpay-return?status=error&message=" + 
-                                URLEncoder.encode("Lỗi hệ thống: " + e.getMessage(), StandardCharsets.UTF_8);
+                                URLEncoder.encode("Loi he thong: " + e.getMessage(), StandardCharsets.UTF_8);
             return new org.springframework.web.servlet.view.RedirectView(redirectUrl);
+        }
+    }
+
+    /**
+     * Kiểm tra trạng thái thanh toán của đơn hàng (public endpoint)
+     * Frontend có thể gọi để verify thanh toán
+     */
+    @GetMapping("/payment-status/{maDonHang}")
+    public ResponseEntity<?> kiemTraTrangThaiThanhToan(@PathVariable String maDonHang) {
+        try {
+            Map<String, Object> trangThai = donHangService.layTrangThaiThanhToan(maDonHang);
+            return ResponseEntity.ok(ApiResponse.ok("Trạng thái thanh toán", trangThai));
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
         }
     }
 

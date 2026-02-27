@@ -49,8 +49,13 @@ public class GioHangChiTiet {
     }
 
     public BigDecimal getThanhTien() {
-        if (donGia != null && soLuong != null) {
-            return donGia.multiply(BigDecimal.valueOf(soLuong));
+        BigDecimal gia = donGia;
+        // Fallback to BienThe.gia if donGia is null or zero
+        if ((gia == null || gia.signum() == 0) && bienThe != null) {
+            gia = bienThe.getGia();
+        }
+        if (gia != null && soLuong != null) {
+            return gia.multiply(BigDecimal.valueOf(soLuong));
         }
         return BigDecimal.ZERO;
     }

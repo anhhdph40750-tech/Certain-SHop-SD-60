@@ -154,13 +154,16 @@ public class GHNApiService {
             body.put("height", 5);
             body.put("insurance_value", 0); // Không bảo hiểm
 
-            log.info("GHN tính phí - Body: {}", body);
+            log.info("GHN Request URL: {}", url);
+            log.info("GHN Request Headers - Token: {}, ShopId: {}", token, shopId);
+            log.info("GHN Request Body: {}", body);
 
             ResponseEntity<String> response = restTemplate.exchange(
                     url, HttpMethod.POST,
                     new HttpEntity<>(body, headers), String.class);
 
-            log.info("GHN response: {}", response.getBody());
+            log.info("GHN Response Status: {}", response.getStatusCode());
+            log.info("GHN Response Body: {}", response.getBody());
 
             JsonNode root = objectMapper.readTree(response.getBody());
             

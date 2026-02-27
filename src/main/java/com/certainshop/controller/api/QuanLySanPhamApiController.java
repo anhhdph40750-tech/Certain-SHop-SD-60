@@ -106,6 +106,21 @@ public class QuanLySanPhamApiController {
         }
     }
 
+    @PostMapping("/{sanPhamId}/bien-the/bulk")
+    public ResponseEntity<ApiResponse<List<BienThe>>> taoBulkBienThe(
+            @PathVariable Long sanPhamId, @RequestBody List<BienTheDto> danhSachBienThe) {
+        try {
+            if (danhSachBienThe == null || danhSachBienThe.isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.loi("Danh sách biến thể không được trống"));
+            }
+            List<BienThe> result = sanPhamService.taoBulkBienThe(sanPhamId, danhSachBienThe);
+            return ResponseEntity.ok(ApiResponse.ok(
+                    String.format("Tạo %d biến thể thành công", result.size()), result));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.loi(e.getMessage()));
+        }
+    }
+
     @PutMapping("/bien-the/{bienTheId}")
     public ResponseEntity<ApiResponse<BienThe>> capNhatBienThe(
             @PathVariable Long bienTheId, @RequestBody BienTheDto dto) {

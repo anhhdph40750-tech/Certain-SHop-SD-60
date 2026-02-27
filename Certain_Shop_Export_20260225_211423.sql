@@ -576,6 +576,7 @@ CREATE TABLE [dbo].[SanPham](
 	[TrangThaiSanPham] [varchar](30) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
 	[ThoiGianTao] [datetime] NOT NULL,
 	[ThoiGianCapNhat] [datetime] NULL,
+    [TrangThai] BIT DEFAULT 1;
 PRIMARY KEY CLUSTERED 
 (
 	[Id] ASC

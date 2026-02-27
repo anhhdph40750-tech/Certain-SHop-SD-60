@@ -50,6 +50,11 @@ public class DonHang {
     @JoinColumn(name = "KhuyenMaiId")
     private KhuyenMai khuyenMai;
 
+    // Mã voucher áp dụng
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "VoucherId")
+    private Voucher voucher;
+
     // Thông tin giao hàng
     @Column(name = "TenNguoiNhan", length = 150)
     private String tenNguoiNhan;

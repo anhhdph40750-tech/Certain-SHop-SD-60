@@ -121,6 +121,7 @@ public class BaoMatConfig {
                     "/api/danh-muc/**",
                     "/api/thuong-hieu/**",
                     "/api/tim-kiem/**",
+                    "/api/ghn/**",
                     "/api/dia-chi/tinh-thanh",
                     "/api/dia-chi/quan-huyen/**",
                     "/api/dia-chi/phuong-xa/**",

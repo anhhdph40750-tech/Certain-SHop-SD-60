@@ -11,7 +11,15 @@ import java.util.Optional;
 @Repository
 public interface BienTheRepository extends JpaRepository<BienThe, Long> {
 
-    List<BienThe> findBySanPhamId(Long sanPhamId);
+    // Fetch eagerly with images to avoid LazyInitializationException
+    @Query("SELECT DISTINCT bt FROM BienThe bt " +
+           "LEFT JOIN FETCH bt.danhSachHinhAnh " +
+           "LEFT JOIN FETCH bt.kichThuoc " +
+           "LEFT JOIN FETCH bt.mauSac " +
+           "LEFT JOIN FETCH bt.chatLieu " +
+           "WHERE bt.sanPham.id = :sanPhamId " +
+           "ORDER BY bt.macDinh DESC, bt.id ASC")
+    List<BienThe> findBySanPhamId(@Param("sanPhamId") Long sanPhamId);
 
     List<BienThe> findBySanPhamIdAndTrangThaiTrue(Long sanPhamId);
 

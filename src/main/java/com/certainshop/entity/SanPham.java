@@ -48,6 +48,9 @@ public class SanPham {
     @Column(name = "TrangThaiSanPham", length = 30)
     private String trangThaiSanPham = "DANG_BAN"; // DANG_BAN | NGUNG_BAN | HET_HANG
 
+    @Column(name = "TrangThai", nullable = false)
+    private Boolean trangThai = true; // true = active, false = deleted (soft delete)
+
     @Column(name = "ThoiGianTao")
     private LocalDateTime thoiGianTao;
 
@@ -70,6 +73,7 @@ public class SanPham {
     protected void truocKhiTao() {
         thoiGianTao = LocalDateTime.now();
         if (trangThaiSanPham == null) trangThaiSanPham = "DANG_BAN";
+        if (trangThai == null) trangThai = true;
     }
 
     @PreUpdate

@@ -107,8 +107,12 @@ public class GioHangApiController {
         result.put("danhSachChiTiet", items);
         result.put("soLuongSanPham", items.size());
 
+        // Calculate total safely — thanhTien is guaranteed non-null from toChiTietResponse
         BigDecimal tongTien = items.stream()
-                .map(i -> (BigDecimal) i.get("thanhTien"))
+                .map(i -> {
+                    Object tt = i.get("thanhTien");
+                    return tt instanceof BigDecimal ? (BigDecimal) tt : BigDecimal.ZERO;
+                })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         result.put("tongTien", tongTien);
 
@@ -119,8 +123,26 @@ public class GioHangApiController {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("id", ct.getId());
         m.put("soLuong", ct.getSoLuong());
-        m.put("donGia", ct.getDonGia());
-        m.put("thanhTien", ct.getThanhTien());
+        
+        // Safely get price with complete fallback chain — never allow null
+        BigDecimal donGia = ct.getDonGia();
+        if (donGia == null || donGia.signum() == 0) {
+            if (ct.getBienThe() != null && ct.getBienThe().getGia() != null) {
+                donGia = ct.getBienThe().getGia();
+            } else {
+                donGia = BigDecimal.ZERO;
+            }
+        }
+        // Final safety: ensure donGia is never null
+        if (donGia == null) {
+            donGia = BigDecimal.ZERO;
+        }
+        m.put("donGia", donGia);
+        
+        // Calculate thanhTien — donGia is guaranteed non-null
+        BigDecimal soLuong = BigDecimal.valueOf(ct.getSoLuong() != null ? ct.getSoLuong() : 1);
+        BigDecimal thanhTien = donGia.multiply(soLuong);
+        m.put("thanhTien", thanhTien);
 
         if (ct.getBienThe() != null) {
             var bt = ct.getBienThe();

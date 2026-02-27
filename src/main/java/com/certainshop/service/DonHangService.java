@@ -247,9 +247,10 @@ public class DonHangService {
         // Validate luồng trạng thái
         kiemTraLuongTrangThai(trangThaiHienTai, trangThaiMoi, donHang.getPhuongThucThanhToan());
 
-        // Trừ kho khi xác nhận (COD) hoặc đã thanh toán (VNPAY đã xử lý riêng)
-        if (TrangThaiDonHang.DA_XAC_NHAN.equals(trangThaiMoi)
-                && "COD".equalsIgnoreCase(donHang.getPhuongThucThanhToan())) {
+        // Trừ kho khi chuyển sang DA_XAC_NHAN (for both COD and VNPAY)
+        // - COD: admin confirms order → deduct inventory
+        // - VNPAY: admin confirms paid order → deduct inventory
+        if (TrangThaiDonHang.DA_XAC_NHAN.equals(trangThaiMoi)) {
             truKho(donHang);
         }
 
@@ -544,43 +545,6 @@ public class DonHangService {
         ghiLichSuTrangThai(donHang, TrangThaiDonHang.HOA_DON_CHO, TrangThaiDonHang.DA_HUY, "Hủy hóa đơn chờ", nhanVien);
     }
 
-    // ===================== VNPAY CALLBACK =====================
-
-    /**
-     * Xử lý khi VNPay thanh toán thành công
-     */
-    public DonHang xacNhanThanhToanVNPay(String maDonHang, String maGiaoDich) {
-        DonHang donHang = donHangRepository.findByMaDonHang(maDonHang)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng: " + maDonHang));
-
-        if (!TrangThaiDonHang.CHO_THANH_TOAN.equals(donHang.getTrangThaiDonHang())) {
-            return donHang; // Đã xử lý rồi
-        }
-
-        donHang.setVnPayTransactionRef(maGiaoDich);
-        donHang.setTrangThaiDonHang(TrangThaiDonHang.DA_THANH_TOAN);
-        donHang = donHangRepository.save(donHang);
-
-        // Trừ kho ngay khi thanh toán VNPay thành công
-        truKho(donHang);
-
-        ghiLichSuTrangThai(donHang, TrangThaiDonHang.CHO_THANH_TOAN, TrangThaiDonHang.DA_THANH_TOAN,
-                "Thanh toán VNPay thành công - Mã GD: " + maGiaoDich, null);
-
-        // Gửi mail xác nhận thanh toán VNPay cho khách
-        if (donHang.getNguoiDung() != null) {
-            mailService.guiMailXacNhanThanhToanVNPay(
-                    donHang.getNguoiDung().getEmail(),
-                    donHang.getNguoiDung().getHoTen(),
-                    donHang.getMaDonHang(),
-                    donHang.getTongTienThanhToan(),
-                    maGiaoDich
-            );
-        }
-
-        return donHang;
-    }
-
     // ===================== TÌM KIẾM =====================
 
     @Transactional(readOnly = true)
@@ -678,18 +642,37 @@ public class DonHangService {
         boolean hop = false;
 
         if ("COD".equalsIgnoreCase(phuongThucThanhToan) || phuongThucThanhToan == null) {
+            // COD workflow: Chờ → Xác nhận (TRỪ KHO) → Xử lý → Giao → Hoàn tất
+            // Cancellation (DA_HUY) allowed from: CHO_XAC_NHAN, DA_XAC_NHAN, DANG_XU_LY, DANG_GIAO
             hop = switch (hienTai) {
-                case TrangThaiDonHang.CHO_XAC_NHAN -> TrangThaiDonHang.DA_XAC_NHAN.equals(tiepTheo);
-                case TrangThaiDonHang.DA_XAC_NHAN -> TrangThaiDonHang.DANG_XU_LY.equals(tiepTheo);
-                case TrangThaiDonHang.DANG_XU_LY -> TrangThaiDonHang.DANG_GIAO.equals(tiepTheo);
-                case TrangThaiDonHang.DANG_GIAO -> TrangThaiDonHang.HOAN_TAT.equals(tiepTheo);
+                case TrangThaiDonHang.CHO_THANH_TOAN -> 
+                    TrangThaiDonHang.CHO_XAC_NHAN.equals(tiepTheo) || TrangThaiDonHang.DA_HUY.equals(tiepTheo);
+                case TrangThaiDonHang.CHO_XAC_NHAN -> 
+                    TrangThaiDonHang.DA_XAC_NHAN.equals(tiepTheo) || TrangThaiDonHang.DA_HUY.equals(tiepTheo);
+                case TrangThaiDonHang.DA_XAC_NHAN -> 
+                    TrangThaiDonHang.DANG_XU_LY.equals(tiepTheo) || TrangThaiDonHang.DA_HUY.equals(tiepTheo);
+                case TrangThaiDonHang.DANG_XU_LY -> 
+                    TrangThaiDonHang.DANG_GIAO.equals(tiepTheo) || TrangThaiDonHang.DA_HUY.equals(tiepTheo);
+                case TrangThaiDonHang.DANG_GIAO -> 
+                    TrangThaiDonHang.HOAN_TAT.equals(tiepTheo) || TrangThaiDonHang.DA_HUY.equals(tiepTheo);
                 default -> false;
             };
         } else if ("VNPAY".equalsIgnoreCase(phuongThucThanhToan)) {
+            // VNPAY workflow: Chờ TT → Đã TT → Chờ xác nhận → Xác nhận (TRỪ KHO) → Xử lý → Giao → Hoàn tất
+            // Cancellation (DA_HUY) allowed from: DA_THANH_TOAN, CHO_XAC_NHAN, DA_XAC_NHAN, DANG_XU_LY, DANG_GIAO
             hop = switch (hienTai) {
-                case TrangThaiDonHang.DA_THANH_TOAN -> TrangThaiDonHang.DANG_XU_LY.equals(tiepTheo);
-                case TrangThaiDonHang.DANG_XU_LY -> TrangThaiDonHang.DANG_GIAO.equals(tiepTheo);
-                case TrangThaiDonHang.DANG_GIAO -> TrangThaiDonHang.HOAN_TAT.equals(tiepTheo);
+                case TrangThaiDonHang.CHO_THANH_TOAN -> 
+                    TrangThaiDonHang.DA_THANH_TOAN.equals(tiepTheo) || TrangThaiDonHang.DA_HUY.equals(tiepTheo);
+                case TrangThaiDonHang.DA_THANH_TOAN -> 
+                    TrangThaiDonHang.CHO_XAC_NHAN.equals(tiepTheo) || TrangThaiDonHang.DA_HUY.equals(tiepTheo);
+                case TrangThaiDonHang.CHO_XAC_NHAN -> 
+                    TrangThaiDonHang.DA_XAC_NHAN.equals(tiepTheo) || TrangThaiDonHang.DA_HUY.equals(tiepTheo);
+                case TrangThaiDonHang.DA_XAC_NHAN -> 
+                    TrangThaiDonHang.DANG_XU_LY.equals(tiepTheo) || TrangThaiDonHang.DA_HUY.equals(tiepTheo);
+                case TrangThaiDonHang.DANG_XU_LY -> 
+                    TrangThaiDonHang.DANG_GIAO.equals(tiepTheo) || TrangThaiDonHang.DA_HUY.equals(tiepTheo);
+                case TrangThaiDonHang.DANG_GIAO -> 
+                    TrangThaiDonHang.HOAN_TAT.equals(tiepTheo) || TrangThaiDonHang.DA_HUY.equals(tiepTheo);
                 default -> false;
             };
         }
@@ -716,7 +699,93 @@ public class DonHangService {
         return sb.toString();
     }
 
+    // ===================== VNPAY PAYMENT CONFIRMATION =====================
+
+    /**
+     * Xác nhận thanh toán VNPay từ callback gateway
+     * - Idempotent: only process if status is CHO_THANH_TOAN
+     * - Thread-safe: uses optimistic locking
+     */
+    @Transactional
+    public DonHang xacNhanThanhToanVNPay(String maDonHang, String maGiaoDich) {
+        log.info("[VNPay] Xac nhan - Ma DH: {}, Ma giao dich: {}", maDonHang, maGiaoDich);
+        
+        DonHang donHang = donHangRepository.findByMaDonHang(maDonHang)
+                .orElseThrow(() -> {
+                    log.error("[VNPay] Khong tim thay don hang: {}", maDonHang);
+                    return new RuntimeException("Khong tim thay don hang: " + maDonHang);
+                });
+        
+        // Idempotency check - only process if waiting for payment
+        String trangThaiHienTai = donHang.getTrangThaiDonHang();
+        if (!TrangThaiDonHang.CHO_THANH_TOAN.equals(trangThaiHienTai)) {
+            log.warn("[VNPay] Don hang khong o trang thai CHO_THANH_TOAN: {} (trang thai: {})", 
+                    maDonHang, trangThaiHienTai);
+            throw new IllegalStateException(
+                    "Don hang da duoc xu ly hoac o trang thai khong hop le: " + trangThaiHienTai);
+        }
+        
+        // Mark as paid
+        donHang.setDaThanhToan(true);
+        if (donHang.getVnPayTransactionRef() == null) {
+            donHang.setVnPayTransactionRef(maGiaoDich);
+        }
+        donHang.setTrangThaiDonHang(TrangThaiDonHang.DA_THANH_TOAN);
+        donHang = donHangRepository.save(donHang);
+        log.info("[VNPay] Cap nhat thanh toan thanh cong - Trang thai: DA_THANH_TOAN: {}", maDonHang);
+        
+        // IMPORTANT: Do NOT deduct inventory here!
+        // Inventory will be deducted LATER when admin confirms (DAXACNhan -> DA_XAC_NHAN)
+        // This is proper business logic: VNPay payment only marks as paid, admin must confirm to process
+        
+        // Record status change history
+        try {
+            ghiLichSuTrangThai(donHang, TrangThaiDonHang.CHO_THANH_TOAN, TrangThaiDonHang.DA_THANH_TOAN,
+                    "Thanh toan VNPay thanh cong. Ma giao dich: " + maGiaoDich, null);
+        } catch (Exception e) {
+            log.warn("[VNPay] Loi ghi lich su: {}", maDonHang, e);
+        }
+        
+        // Send confirmation email (asynchronous, non-blocking)
+        try {
+            if (donHang.getNguoiDung() != null && donHang.getNguoiDung().getEmail() != null) {
+                mailService.guiMailXacNhanDonHang(
+                        donHang.getNguoiDung().getEmail(),
+                        donHang.getNguoiDung().getHoTen(),
+                        donHang.getMaDonHang(),
+                        donHang.getTongTienThanhToan(),
+                        donHang.getPhuongThucThanhToan()
+                );
+                log.info("[VNPay] Gui email xac nhan: {} -> {}", maDonHang, donHang.getNguoiDung().getEmail());
+            }
+        } catch (Exception e) {
+            log.warn("[VNPay] Loi gui email: {}", maDonHang, e);
+        }
+        
+        return donHang;
+    }
+
+    /**
+     * Lấy trạng thái thanh toán đơn hàng - để frontend kiểm tra
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> layTrangThaiThanhToan(String maDonHang) {
+        DonHang donHang = donHangRepository.findByMaDonHang(maDonHang)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
+        
+        return Map.of(
+                "maDonHang", donHang.getMaDonHang(),
+                "trangThai", donHang.getTrangThaiDonHang(),
+                "daThanhToan", donHang.getDaThanhToan(),
+                "phuongThuc", donHang.getPhuongThucThanhToan(),
+                "tongTienThanhToan", donHang.getTongTienThanhToan(),
+                "maGiaoDichVNPay", donHang.getVnPayTransactionRef() != null ? donHang.getVnPayTransactionRef() : "N/A",
+                "thoiGianTao", donHang.getThoiGianTao()
+        );
+    }
+
     // ===================== PHƯƠNG THỨC ĐÃ THU GỌN CHO CONTROLLER =====================
+
 
     /** Tạo hóa đơn chờ - nhận nhanVienId */
     public DonHang taoHoaDonCho(Long nhanVienId) {

@@ -50,6 +50,15 @@ public class GioHangService {
             throw new IllegalArgumentException("Sản phẩm đã ngừng kinh doanh");
         }
 
+        // Determine price: prefer variant price, fall back to product.giaBan
+        BigDecimal price = bienThe.getGia();
+        if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
+            price = bienThe.getSanPham() != null ? bienThe.getSanPham().getGiaBan() : null;
+        }
+        if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Giá biến thể không hợp lệ");
+        }
+
         Optional<GioHangChiTiet> chiTietHienTai =
                 gioHangChiTietRepository.findByGioHangIdAndBienTheId(gioHang.getId(), bienTheId);
 
@@ -71,7 +80,7 @@ public class GioHangService {
             }
 
             chiTiet.setSoLuong(soLuongMoi);
-            chiTiet.setDonGia(bienThe.getGia());
+            chiTiet.setDonGia(price);
             return gioHangChiTietRepository.save(chiTiet);
         } else {
             if (soLuong > soLuongMuaToiDa) {
@@ -87,7 +96,7 @@ public class GioHangService {
                     .gioHang(gioHang)
                     .bienThe(bienThe)
                     .soLuong(soLuong)
-                    .donGia(bienThe.getGia())
+                    .donGia(price)
                     .build();
             return gioHangChiTietRepository.save(chiTiet);
         }

@@ -16,6 +16,7 @@ import java.nio.file.*;
 import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -103,17 +104,23 @@ public class SanPhamService {
     }
 
     /**
-     * Xóa mềm sản phẩm
+     * Xóa sản phẩm và tất cả biến thể của nó (hard delete)
      */
     public void xoaSanPham(Long id) {
         SanPham sanPham = sanPhamRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
-        sanPham.setTrangThai(false);
-        // Xóa mềm tất cả biến thể
+        
+        // Xóa tất cả ảnh liên quan
         List<BienThe> bienThes = bienTheRepository.findBySanPhamId(id);
-        bienThes.forEach(bt -> bt.setTrangThai(false));
-        bienTheRepository.saveAll(bienThes);
-        sanPhamRepository.save(sanPham);
+        for (BienThe bt : bienThes) {
+            hinhAnhBienTheRepository.deleteByBienTheId(bt.getId());
+        }
+        
+        // Xóa tất cả biến thể
+        bienTheRepository.deleteAll(bienThes);
+        
+        // Xóa sản phẩm
+        sanPhamRepository.delete(sanPham);
     }
 
     /**
@@ -160,6 +167,36 @@ public class SanPhamService {
         return bienTheRepository.save(bienThe);
     }
 
+    /**
+     * Tạo nhiều biến thể cùng lúc (bulk add) cho sản phẩm đã tồn tại
+     */
+    public List<BienThe> taoBulkBienThe(Long sanPhamId, List<BienTheDto> danhSach) {
+        SanPham sanPham = sanPhamRepository.findById(sanPhamId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
+        
+        List<BienThe> result = new ArrayList<>();
+        boolean daDatMacDinh = false;
+        
+        // Kiểm tra xem có biến thể mặc định nào chưa
+        List<BienThe> existingVariants = bienTheRepository.findBySanPhamId(sanPhamId);
+        daDatMacDinh = existingVariants.stream().anyMatch(BienThe::getMacDinh);
+        
+        for (int i = 0; i < danhSach.size(); i++) {
+            BienTheDto dto = danhSach.get(i);
+            dto.setSanPhamId(sanPhamId);
+            
+            // Nếu chưa có biến thể mặc định, set biến thể đầu tiên làm mặc định
+            if (!daDatMacDinh && i == 0) {
+                dto.setMacDinh(true);
+                daDatMacDinh = true;
+            }
+            
+            result.add(taoBienThe(sanPhamId, dto));
+        }
+        
+        return result;
+    }
+
     private void taoNhieuBienThe(SanPham sanPham, List<BienTheDto> danhSach) {
         boolean daDatMacDinh = false;
         for (int i = 0; i < danhSach.size(); i++) {
@@ -174,10 +211,6 @@ public class SanPhamService {
             taoBienThe(sanPham.getId(), dto);
         }
     }
-
-    /**
-     * Cập nhật biến thể
-     */
     public BienThe capNhatBienThe(Long bienTheId, BienTheDto dto) {
         BienThe bienThe = bienTheRepository.findById(bienTheId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy biến thể"));
