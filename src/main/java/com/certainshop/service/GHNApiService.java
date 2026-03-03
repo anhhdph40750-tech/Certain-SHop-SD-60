@@ -2,7 +2,6 @@ package com.certainshop.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -30,7 +29,7 @@ public class GHNApiService {
     @Value("${ghn.shopId:}")
     private String shopId;
 
-    @Value("${ghn.warehouseDistrictId:1542}")
+    @Value("${ghn.warehouseDistrictId}")
     private Integer warehouseDistrictId; // Kho hàng (mặc định Hà Đông, Hà Nội)
 
     @Value("${ghn.warehouseWardCode:20314}")

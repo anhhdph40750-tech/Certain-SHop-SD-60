@@ -114,7 +114,9 @@ public class DonHang {
 
     @PrePersist
     protected void truocKhiTao() {
-        thoiGianTao = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        thoiGianTao = now;
+        thoiGianCapNhat = now;  // Set on creation too
     }
 
     @PreUpdate

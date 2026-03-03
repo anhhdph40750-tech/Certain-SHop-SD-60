@@ -61,7 +61,9 @@ public class Voucher {
 
     @PrePersist
     protected void onCreate() {
-        thoiGianTao = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        thoiGianTao = now;
+        thoiGianCapNhat = now;  // Set on creation too, not just on update
         if (trangThai == null) trangThai = true;
     }
 

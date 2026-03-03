@@ -30,20 +30,20 @@ public class VoucherApiController {
     }
 
     /**
-     * Admin: Danh sách TẤT CẢ vouchers (bao gồm hết hạn, inactive)
+     * Admin/Staff: Danh sách TẤT CẢ vouchers (bao gồm hết hạn, inactive)
      */
     @GetMapping("/all")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN')")
     public ResponseEntity<ApiResponse<List<Voucher>>> danhSachTatCa() {
         List<Voucher> vouchers = voucherService.danhSachTatCaVoucher();
         return ResponseEntity.ok(ApiResponse.ok("Danh sách tất cả vouchers", vouchers));
     }
 
     /**
-     * Admin: Tạo voucher mới
+     * Admin/Staff: Tạo voucher mới
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN')")
     public ResponseEntity<ApiResponse<Voucher>> taoVoucher(@RequestBody Voucher voucher) {
         try {
             Voucher created = voucherService.taoVoucher(voucher);
@@ -54,10 +54,10 @@ public class VoucherApiController {
     }
 
     /**
-     * Admin: Cập nhật voucher
+     * Admin/Staff: Cập nhật voucher
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN')")
     public ResponseEntity<ApiResponse<Voucher>> capNhatVoucher(
             @PathVariable Long id, @RequestBody Voucher updates) {
         try {
@@ -69,10 +69,10 @@ public class VoucherApiController {
     }
 
     /**
-     * Admin: Xóa voucher
+     * Admin/Staff: Xóa voucher (soft delete)
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN')")
     public ResponseEntity<ApiResponse<Void>> xoaVoucher(@PathVariable Long id) {
         try {
             voucherService.xoaVoucher(id);

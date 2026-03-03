@@ -33,11 +33,23 @@ public class SanPhamService {
     private final MauSacRepository mauSacRepository;
     private final ChatLieuRepository chatLieuRepository;
     private final HinhAnhBienTheRepository hinhAnhBienTheRepository;
+    private final jakarta.persistence.EntityManager entityManager;
 
     /**
      * Tạo sản phẩm mới cùng biến thể
      */
     public SanPham taoSanPham(SanPhamDto dto) {
+        // Validate input
+        if (dto.getTenSanPham() == null || dto.getTenSanPham().trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên sản phẩm không được để trống");
+        }
+        if (dto.getDanhMucId() == null) {
+            throw new IllegalArgumentException("Danh mục không được để trống");
+        }
+        if (dto.getGiaGoc() == null) {
+            throw new IllegalArgumentException("Giá gốc không được để trống");
+        }
+        
         // Validate trùng tên
         if (sanPhamRepository.existsByTenSanPham(dto.getTenSanPham())) {
             throw new IllegalArgumentException("Tên sản phẩm đã tồn tại");
@@ -76,6 +88,17 @@ public class SanPhamService {
      * Cập nhật sản phẩm
      */
     public SanPham capNhatSanPham(Long id, SanPhamDto dto) {
+        // Validate input
+        if (dto.getTenSanPham() == null || dto.getTenSanPham().trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên sản phẩm không được để trống");
+        }
+        if (dto.getDanhMucId() == null) {
+            throw new IllegalArgumentException("Danh mục không được để trống");
+        }
+        if (dto.getGiaGoc() == null) {
+            throw new IllegalArgumentException("Giá gốc không được để trống");
+        }
+        
         SanPham sanPham = sanPhamRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
 
@@ -104,23 +127,27 @@ public class SanPhamService {
     }
 
     /**
-     * Xóa sản phẩm và tất cả biến thể của nó (hard delete)
+     * Xóa sản phẩm và tất cả biến thể của nó (soft delete)
      */
+    @Transactional
     public void xoaSanPham(Long id) {
         SanPham sanPham = sanPhamRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
         
-        // Xóa tất cả ảnh liên quan
+        // Soft delete tất cả biến thể
         List<BienThe> bienThes = bienTheRepository.findBySanPhamId(id);
         for (BienThe bt : bienThes) {
-            hinhAnhBienTheRepository.deleteByBienTheId(bt.getId());
+            // Merge to re-attach detached entity to persistence context
+            BienThe managedBienThe = entityManager.merge(bt);
+            managedBienThe.setTrangThai(false);  // Now properly sets trangThai Boolean field
         }
         
-        // Xóa tất cả biến thể
-        bienTheRepository.deleteAll(bienThes);
+        // Soft delete sản phẩm
+        SanPham managedSanPham = entityManager.merge(sanPham);
+        managedSanPham.setTrangThai(false);  // Now properly sets trangThai Boolean field
         
-        // Xóa sản phẩm
-        sanPhamRepository.delete(sanPham);
+        // Flush to ensure updates are persisted
+        entityManager.flush();
     }
 
     /**
@@ -158,7 +185,7 @@ public class SanPhamService {
 
         // Nếu là mặc định, bỏ mặc định của các biến thể khác
         if (Boolean.TRUE.equals(dto.getMacDinh())) {
-            danhSachBienTheCuaSanPham(sanPhamId).forEach(bt -> {
+            danhSachBienTheCuaSanPhamQuanLy(sanPhamId).forEach(bt -> {
                 bt.setMacDinh(false);
                 bienTheRepository.save(bt);
             });
@@ -237,7 +264,7 @@ public class SanPhamService {
         bienThe.setTrangThai(dto.getTrangThai() != null ? dto.getTrangThai() : true);
 
         if (Boolean.TRUE.equals(dto.getMacDinh())) {
-            danhSachBienTheCuaSanPham(bienThe.getSanPham().getId()).forEach(bt -> {
+            danhSachBienTheCuaSanPhamQuanLy(bienThe.getSanPham().getId()).forEach(bt -> {
                 bt.setMacDinh(false);
                 bienTheRepository.save(bt);
             });
@@ -325,6 +352,13 @@ public class SanPhamService {
 
     @Transactional(readOnly = true)
     public List<BienThe> danhSachBienTheCuaSanPham(Long sanPhamId) {
+        // For customers: only return active variants (trangThai = true)
+        return bienTheRepository.findBySanPhamIdAndTrangThaiTrue(sanPhamId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<BienThe> danhSachBienTheCuaSanPhamQuanLy(Long sanPhamId) {
+        // For admin: return ALL variants including soft-deleted (trangThai = false)
         return bienTheRepository.findBySanPhamId(sanPhamId);
     }
 

@@ -254,6 +254,14 @@ public class DonHangService {
             truKho(donHang);
         }
 
+        // Mark COD orders as paid when order is completed (HOAN_TAT)
+        // - COD: Payment happens when customer receives order
+        // - When status reaches HOAN_TAT = customer has received package + paid
+        if ("COD".equalsIgnoreCase(donHang.getPhuongThucThanhToan()) 
+            && TrangThaiDonHang.HOAN_TAT.equals(trangThaiMoi)) {
+            donHang.setDaThanhToan(true);
+        }
+
         donHang.setTrangThaiDonHang(trangThaiMoi);
         donHang = donHangRepository.save(donHang);
 
@@ -660,6 +668,14 @@ public class DonHangService {
         } else if ("VNPAY".equalsIgnoreCase(phuongThucThanhToan)) {
             // VNPAY workflow: Chờ TT → Đã TT → Chờ xác nhận → Xác nhận (TRỪ KHO) → Xử lý → Giao → Hoàn tất
             // Cancellation (DA_HUY) allowed from: DA_THANH_TOAN, CHO_XAC_NHAN, DA_XAC_NHAN, DANG_XU_LY, DANG_GIAO
+            
+            // Check if trying to confirm order without payment
+            if (TrangThaiDonHang.CHO_THANH_TOAN.equals(hienTai) && 
+                TrangThaiDonHang.CHO_XAC_NHAN.equals(tiepTheo)) {
+                throw new IllegalArgumentException("Đơn hàng phải thanh toán xong mới có thể xác nhận. " +
+                        "Vui lòng chuyển sang trạng thái 'Đã thanh toán' trước.");
+            }
+            
             hop = switch (hienTai) {
                 case TrangThaiDonHang.CHO_THANH_TOAN -> 
                     TrangThaiDonHang.DA_THANH_TOAN.equals(tiepTheo) || TrangThaiDonHang.DA_HUY.equals(tiepTheo);
@@ -741,7 +757,7 @@ public class DonHangService {
         // Record status change history
         try {
             ghiLichSuTrangThai(donHang, TrangThaiDonHang.CHO_THANH_TOAN, TrangThaiDonHang.DA_THANH_TOAN,
-                    "Thanh toan VNPay thanh cong. Ma giao dich: " + maGiaoDich, null);
+                    "Thanh toán VNPay thành công. Mã giao dịch: " + maGiaoDich, null);
         } catch (Exception e) {
             log.warn("[VNPay] Loi ghi lich su: {}", maDonHang, e);
         }

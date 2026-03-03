@@ -53,7 +53,7 @@ public class DonHangApiController {
             if ("VNPAY".equalsIgnoreCase(dto.getPhuongThucThanhToan())) {
                 try {
                     String ip = VNPayUtil.layIpKhachHang(request);
-                    String moTa = "Thanh toan don hang " + donHang.getMaDonHang();
+                    String moTa = "Thanh toán đơn hàng " + donHang.getMaDonHang();
                     long soTien = donHang.getTongTienThanhToan().longValue();
                     String urlThanhToan = vnPayUtil.taoUrlThanhToan(donHang.getMaDonHang(), soTien, moTa, ip);
                     result.put("urlThanhToan", urlThanhToan);
@@ -234,7 +234,7 @@ public class DonHangApiController {
             
             if ("00".equals(responseCode)) {
                 // Thanh toan thanh cong
-                log.info("[VNPay] Thanh toan thanh cong - Ma DH: {}", maDonHang);
+                log.info("[VNPay] Thanh toán thành công - Mã ĐH: {}", maDonHang);
                 try {
                     DonHang donHang = donHangService.xacNhanThanhToanVNPay(maDonHang, maGiaoDich);
                     log.info("[VNPay] Luu thanh toan vao DB - Ma DH: {}", maDonHang);

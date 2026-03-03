@@ -66,12 +66,16 @@ public class SanPham {
     }
 
     public void setTrangThai(boolean active) {
-        this.trangThaiSanPham = active ? "DANG_BAN" : "NGUNG_BAN";
+        // Update BOTH the Boolean flag AND the status string
+        this.trangThai = active;  //  Set soft-delete flag
+        this.trangThaiSanPham = active ? "DANG_BAN" : "NGUNG_BAN";  //  Set status
     }
 
     @PrePersist
     protected void truocKhiTao() {
-        thoiGianTao = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        thoiGianTao = now;
+        thoiGianCapNhat = now;  // Set on creation too
         if (trangThaiSanPham == null) trangThaiSanPham = "DANG_BAN";
         if (trangThai == null) trangThai = true;
     }

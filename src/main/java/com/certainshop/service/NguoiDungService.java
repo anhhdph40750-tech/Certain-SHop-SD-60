@@ -31,23 +31,23 @@ public class NguoiDungService {
     private final MailService mailService;
 
     /**
-     * Đăng ký tài khoản khách hàng mới
+     *      * Đăng ký tài khoản khách hàng mới
      */
     public NguoiDung dangKy(DangKyDto dto) {
         // Validate trùng
         if (nguoiDungRepository.existsByTenDangNhap(dto.getTenDangNhap())) {
-            throw new IllegalArgumentException("Tên đăng nhập đã tồn tại");
+            throw new IllegalArgumentException("TÃªn Ä‘Äƒng nháº­p Ä‘Ã£ tá»“n táº¡i");
         }
         if (dto.getEmail() != null && !dto.getEmail().isBlank()
                 && nguoiDungRepository.existsByEmail(dto.getEmail())) {
-            throw new IllegalArgumentException("Email đã được sử dụng");
+            throw new IllegalArgumentException("Email Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng");
         }
         if (!dto.getMatKhau().equals(dto.getXacNhanMatKhau())) {
-            throw new IllegalArgumentException("Mật khẩu xác nhận không khớp");
+            throw new IllegalArgumentException("Máº­t kháº©u xÃ¡c nháº­n khÃ´ng khá»›p");
         }
 
         VaiTro vaiTroKhach = vaiTroRepository.findByTenVaiTro(VaiTroConst.KHACH_HANG)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy vai trò Khách hàng"));
+                .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y vai trÃ² KhÃ¡ch hÃ ng"));
 
         NguoiDung nguoiDung = NguoiDung.builder()
                 .tenDangNhap(dto.getTenDangNhap())
@@ -101,12 +101,12 @@ public class NguoiDungService {
      */
     public NguoiDung capNhatThongTin(Long id, NguoiDung thongTinMoi) {
         NguoiDung nguoiDung = nguoiDungRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+                .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng"));
 
         // Kiểm tra email trùng
         if (thongTinMoi.getEmail() != null && !thongTinMoi.getEmail().isBlank()) {
             if (nguoiDungRepository.existsByEmailAndIdNot(thongTinMoi.getEmail(), id)) {
-                throw new IllegalArgumentException("Email đã được sử dụng bởi tài khoản khác");
+                throw new IllegalArgumentException("Email Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng bá»Ÿi tÃ i khoáº£n khÃ¡c");
             }
             nguoiDung.setEmail(thongTinMoi.getEmail());
         }
@@ -124,10 +124,10 @@ public class NguoiDungService {
      */
     public void doiMatKhau(Long id, String matKhauCu, String matKhauMoi) {
         NguoiDung nguoiDung = nguoiDungRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+                .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng"));
 
         if (!passwordEncoder.matches(matKhauCu, nguoiDung.getMatKhauMaHoa())) {
-            throw new IllegalArgumentException("Mật khẩu cũ không đúng");
+            throw new IllegalArgumentException("Máº­t kháº©u cÅ© khÃ´ng Ä‘Ãºng");
         }
 
         nguoiDung.setMatKhauMaHoa(passwordEncoder.encode(matKhauMoi));
@@ -140,7 +140,7 @@ public class NguoiDungService {
      */
     public void capNhatAnh(Long id, String duongDanAnh) {
         NguoiDung nguoiDung = nguoiDungRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+                .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng"));
         nguoiDung.setAnhDaiDien(duongDanAnh);
         nguoiDungRepository.save(nguoiDung);
     }
@@ -153,20 +153,25 @@ public class NguoiDungService {
         return nguoiDungRepository.timKiem(tuKhoa, pageable);
     }
 
+    @Transactional(readOnly = true)
+    public Page<NguoiDung> timKiem(String tuKhoa, String tenVaiTro, Pageable pageable) {
+        return nguoiDungRepository.timKiem(tuKhoa, tenVaiTro, pageable);
+    }
+
     /**
      * Tạo tài khoản nhân viên (admin)
      */
     public NguoiDung taoNhanVien(NguoiDung nhanVien, String matKhau, Integer vaiTroId) {
         if (nguoiDungRepository.existsByTenDangNhap(nhanVien.getTenDangNhap())) {
-            throw new IllegalArgumentException("Tên đăng nhập đã tồn tại");
+            throw new IllegalArgumentException("TÃªn Ä‘Äƒng nháº­p Ä‘Ã£ tá»“n táº¡i");
         }
         if (nhanVien.getEmail() != null && !nhanVien.getEmail().isBlank()
                 && nguoiDungRepository.existsByEmail(nhanVien.getEmail())) {
-            throw new IllegalArgumentException("Email đã được sử dụng");
+            throw new IllegalArgumentException("Email Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng");
         }
 
         VaiTro vaiTro = vaiTroRepository.findById(vaiTroId)
-                .orElseThrow(() -> new RuntimeException("Vai trò không tồn tại"));
+                .orElseThrow(() -> new RuntimeException("Vai trÃ² khÃ´ng tá»“n táº¡i"));
 
         nhanVien.setMatKhauMaHoa(passwordEncoder.encode(matKhau));
         nhanVien.setVaiTro(vaiTro);
@@ -180,11 +185,11 @@ public class NguoiDungService {
      */
     public void doiTrangThaiTaiKhoan(Long id, boolean dangHoatDong) {
         NguoiDung nguoiDung = nguoiDungRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+                .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng"));
 
         // Không cho khoá tài khoản admin cố định (ID = 1)
         if (id == 1L && !dangHoatDong) {
-            throw new IllegalArgumentException("Không thể khoá tài khoản Admin gốc");
+            throw new IllegalArgumentException("KhÃ´ng thá»ƒ khoÃ¡ tÃ i khoáº£n Admin gá»‘c");
         }
 
         nguoiDung.setDangHoatDong(dangHoatDong);
@@ -196,12 +201,12 @@ public class NguoiDungService {
      */
     public void doiVaiTro(Long nguoiDungId, Integer vaiTroId) {
         if (nguoiDungId == 1L) {
-            throw new IllegalArgumentException("Không thể thay đổi vai trò Admin gốc");
+            throw new IllegalArgumentException("KhÃ´ng thá»ƒ thay Ä‘á»•i vai trÃ² Admin gá»‘c");
         }
         NguoiDung nguoiDung = nguoiDungRepository.findById(nguoiDungId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+                .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng"));
         VaiTro vaiTro = vaiTroRepository.findById(vaiTroId)
-                .orElseThrow(() -> new RuntimeException("Vai trò không tồn tại"));
+                .orElseThrow(() -> new RuntimeException("Vai trÃ² khÃ´ng tá»“n táº¡i"));
         nguoiDung.setVaiTro(vaiTro);
         nguoiDungRepository.save(nguoiDung);
     }
@@ -226,3 +231,4 @@ public class NguoiDungService {
         return nguoiDungRepository.findByTenVaiTro(tenVaiTro, pageable);
     }
 }
+

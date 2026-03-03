@@ -41,14 +41,16 @@ public interface SanPhamRepository extends JpaRepository<SanPham, Long> {
     @Query("SELECT sp FROM SanPham sp WHERE sp.trangThaiSanPham = 'DANG_BAN' AND sp.danhMuc.duongDan = :duongDan")
     Page<SanPham> findByDanhMucDuongDan(@Param("duongDan") String duongDan, Pageable pageable);
 
-    // Sản phẩm bán chạy
+    // Sản phẩm bán chạy (last 30 days, DANG_BAN status, not soft-deleted)
     @Query("SELECT sp FROM SanPham sp " +
            "JOIN sp.danhSachBienThe bt " +
            "JOIN ChiTietDonHang ctdh ON ctdh.bienThe = bt " +
            "JOIN ctdh.donHang dh " +
-           "WHERE dh.trangThaiDonHang = 'HOAN_TAT' " +
+           "WHERE sp.trangThai = true " +
+           "AND sp.trangThaiSanPham = 'DANG_BAN' " +
+           "AND dh.trangThaiDonHang = 'HOAN_TAT' " +
            "AND dh.thoiGianTao >= :tuNgay " +
-           "GROUP BY sp.id, sp.maSanPham, sp.tenSanPham, sp.moTa, sp.giaGoc, sp.giaBan, sp.danhMuc, sp.thuongHieu, sp.anhChinh, sp.duongDan, sp.trangThaiSanPham, sp.thoiGianTao, sp.thoiGianCapNhat " +
+           "GROUP BY sp.id, sp.maSanPham, sp.tenSanPham, sp.moTa, sp.giaGoc, sp.giaBan, sp.danhMuc, sp.thuongHieu, sp.anhChinh, sp.duongDan, sp.trangThaiSanPham, sp.trangThai, sp.thoiGianTao, sp.thoiGianCapNhat " +
            "ORDER BY SUM(ctdh.soLuong) DESC")
     List<SanPham> findSanPhamBanChay(@Param("tuNgay") java.time.LocalDateTime tuNgay, Pageable pageable);
 
