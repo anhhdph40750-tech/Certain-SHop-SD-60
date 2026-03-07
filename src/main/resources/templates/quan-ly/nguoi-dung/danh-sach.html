@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Quản lý người dùng - Certain Shop</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+    <link rel="stylesheet" th:href="@{/css/admin.css}"/>
+</head>
+<body>
+<div class="d-flex">
+    <div th:replace="~{fragments/admin-layout :: adminSidebar}"></div>
+    <main class="flex-fill bg-light" style="min-height:100vh">
+        <div class="bg-dark text-white px-4 py-2 d-flex align-items-center justify-content-between">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-people me-2 text-warning"></i>
+                <span th:text="${loai == 'NHAN_VIEN'} ? 'Nhân viên' : 'Khách hàng'">Người dùng</span>
+            </h5>
+            <div class="d-flex gap-2">
+                <a href="/quan-ly/nguoi-dung?loai=KHACH_HANG" class="btn btn-sm btn-outline-light"
+                   th:classappend="${loai == 'KHACH_HANG'} ? 'active'">Khách hàng</a>
+                <a href="/admin/nhan-vien" class="btn btn-sm btn-outline-light"
+                   th:classappend="${loai == 'NHAN_VIEN'} ? 'active'" sec:authorize="hasRole('ADMIN')">Nhân viên</a>
+                <a href="/admin/nhan-vien/them-moi" class="btn btn-sm btn-success" sec:authorize="hasRole('ADMIN')"
+                   th:if="${loai == 'NHAN_VIEN'}">
+                    <i class="bi bi-plus-circle me-1"></i>Thêm nhân viên
+                </a>
+            </div>
+        </div>
+
+        <div class="container-fluid p-4">
+            <div th:replace="~{fragments/admin-layout :: flashMessages}"></div>
+
+            <!-- Bộ lọc -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <form method="get" th:action="${loai == 'NHAN_VIEN'} ? '/admin/nhan-vien' : '/quan-ly/nguoi-dung'" class="row g-3">
+                        <input type="hidden" name="loai" th:value="${loai}"/>
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" name="tuKhoa" th:value="${tuKhoa}"
+                                   placeholder="Tên, email, SĐT..."/>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" name="trangThai">
+                                <option value="">-- Tất cả trạng thái --</option>
+                                <option value="HOAT_DONG" th:selected="${trangThai=='HOAT_DONG'}">Hoạt động</option>
+                                <option value="BI_KHOA" th:selected="${trangThai=='BI_KHOA'}">Bị khóa</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search me-1"></i>Tìm kiếm
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Danh sách -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                        <tr>
+                            <th style="width:60px">Avatar</th>
+                            <th>Họ tên</th>
+                            <th>Email</th>
+                            <th>Số điện thoại</th>
+                            <th class="text-center">Vai trò</th>
+                            <th class="text-center">Trạng thái</th>
+                            <th class="text-center">Ngày đăng ký</th>
+                            <th class="text-center">Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="nd : ${danhSachNguoiDung}">
+                            <td>
+                                <img th:if="${nd.anhDaiDien != null}"
+                                     th:src="@{/uploads/} + ${nd.anhDaiDien}"
+                                     style="width:40px;height:40px;border-radius:50%;object-fit:cover"/>
+                                <div th:unless="${nd.anhDaiDien != null}"
+                                     class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center"
+                                     style="width:40px;height:40px;font-weight:bold"
+                                     th:text="${nd.hoTen?.substring(0,1)?.toUpperCase()}">A</div>
+                            </td>
+                            <td class="fw-semibold" th:text="${nd.hoTen}">Nguyễn A</td>
+                            <td class="small text-muted" th:text="${nd.email}">email@example.com</td>
+                            <td class="small" th:text="${nd.soDienThoai}">0900000000</td>
+                            <td class="text-center">
+                                <span class="badge"
+                                      th:classappend="${nd.vaiTro?.tenVaiTro == 'ADMIN'} ? 'bg-danger' :
+                                        (${nd.vaiTro?.tenVaiTro == 'NHAN_VIEN'}) ? 'bg-warning text-dark' : 'bg-info text-dark'"
+                                      th:text="${nd.vaiTro?.tenVaiTro == 'ADMIN'} ? 'Admin' :
+                                        (${nd.vaiTro?.tenVaiTro == 'NHAN_VIEN'}) ? 'Nhân viên' : 'Khách hàng'">KH</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge"
+                                      th:classappend="${nd.trangThai?.name() == 'HOAT_DONG'} ? 'bg-success' : 'bg-danger'"
+                                      th:text="${nd.trangThai?.name() == 'HOAT_DONG'} ? 'Hoạt động' : 'Bị khóa'">OK</span>
+                            </td>
+                            <td class="text-center small" th:text="${#temporals.format(nd.ngayTao, 'dd/MM/yyyy')}">01/01/2024</td>
+                            <td class="text-center">
+                                <a th:href="@{/quan-ly/nguoi-dung/} + ${nd.id}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr th:if="${danhSachNguoiDung == null or danhSachNguoiDung.empty}">
+                            <td colspan="8" class="text-center text-muted py-4">Không có người dùng nào</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-white d-flex justify-content-between align-items-center" th:if="${page != null}">
+                    <span class="small text-muted">Tổng <strong th:text="${page.totalElements}">0</strong> người dùng</span>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0" th:if="${page.totalPages > 1}">
+                            <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                                <a class="page-link" th:href="@{(trang=${page.number-1},tuKhoa=${tuKhoa},loai=${loai},trangThai=${trangThai})}">«</a>
+                            </li>
+                            <li th:each="i : ${#numbers.sequence(0, page.totalPages-1)}" class="page-item"
+                                th:classappend="${i == page.number} ? 'active'">
+                                <a class="page-link" th:href="@{(trang=${i},tuKhoa=${tuKhoa},loai=${loai},trangThai=${trangThai})}"
+                                   th:text="${i+1}">1</a>
+                            </li>
+                            <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                                <a class="page-link" th:href="@{(trang=${page.number+1},tuKhoa=${tuKhoa},loai=${loai},trangThai=${trangThai})}">»</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

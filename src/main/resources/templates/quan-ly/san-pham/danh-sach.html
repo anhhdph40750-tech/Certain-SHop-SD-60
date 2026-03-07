@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Quản lý sản phẩm - Certain Shop</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+    <link rel="stylesheet" th:href="@{/css/admin.css}"/>
+</head>
+<body>
+<div class="d-flex">
+    <div th:replace="~{fragments/admin-layout :: adminSidebar}"></div>
+
+    <main class="flex-fill bg-light" style="min-height:100vh">
+        <div class="bg-dark text-white px-4 py-2 d-flex align-items-center justify-content-between">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-box-seam me-2 text-warning"></i>Quản lý sản phẩm</h5>
+            <a href="/quan-ly/san-pham/them-moi" class="btn btn-success btn-sm">
+                <i class="bi bi-plus-circle me-1"></i>Thêm sản phẩm
+            </a>
+        </div>
+
+        <div class="container-fluid p-4">
+            <div th:replace="~{fragments/admin-layout :: flashMessages}"></div>
+
+            <!-- Bộ lọc -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <form method="get" action="/quan-ly/san-pham" class="row g-3">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" name="tuKhoa"
+                                   th:value="${tuKhoa}" placeholder="Tên, mã sản phẩm..."/>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="danhMucId">
+                                <option value="">-- Tất cả danh mục --</option>
+                                <option th:each="dm : ${danhSachDanhMuc}"
+                                        th:value="${dm.id}" th:text="${dm.tenDanhMuc}"
+                                        th:selected="${dm.id == danhMucId}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="trangThai">
+                                <option value="">-- Tất cả trạng thái --</option>
+                                <option value="DANG_BAN" th:selected="${trangThai=='DANG_BAN'}">Đang bán</option>
+                                <option value="NGUNG_BAN" th:selected="${trangThai=='NGUNG_BAN'}">Ngừng bán</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search me-1"></i>Tìm kiếm
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Danh sách sản phẩm -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                        <tr>
+                            <th style="width:60px">Ảnh</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Danh mục</th>
+                            <th class="text-center">Số biến thể</th>
+                            <th class="text-end">Giá bán</th>
+                            <th class="text-center">Trạng thái</th>
+                            <th style="width:120px"></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="sp : ${danhSachSanPham}">
+                            <td>
+                                <img th:if="${sp.anhChinh != null}"
+                                     th:src="@{/uploads/} + ${sp.anhChinh}"
+                                     style="width:50px;height:50px;object-fit:cover;border-radius:6px"/>
+                                <img th:unless="${sp.anhChinh != null}"
+                                     th:src="@{/img/no-image.png}"
+                                     style="width:50px;height:50px;object-fit:cover;border-radius:6px"/>
+                            </td>
+                            <td>
+                                <div class="fw-semibold" th:text="${sp.tenSanPham}">Áo phông</div>
+                                <small class="text-muted" th:text="${sp.maSanPham}">SP001</small>
+                            </td>
+                            <td th:text="${sp.danhMuc?.tenDanhMuc}">Áo</td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary" th:text="${sp.bienThes?.size() ?: 0} + ' biến thể'">0 biến thể</span>
+                            </td>
+                            <td class="text-end fw-bold text-danger"
+                                th:text="${sp.giaBan != null} ? ${#numbers.formatDecimal(sp.giaBan, 0, 'COMMA', 0, 'POINT')} + 'đ' : '-'">0đ</td>
+                            <td class="text-center">
+                                <span class="badge"
+                                      th:classappend="${sp.trangThai?.name()} == 'DANG_BAN' ? 'bg-success' : 'bg-secondary'"
+                                      th:text="${sp.trangThai?.name()} == 'DANG_BAN' ? 'Đang bán' : 'Ngừng bán'">Đang bán</span>
+                            </td>
+                            <td class="text-center">
+                                <a th:href="@{/quan-ly/san-pham/} + ${sp.id}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button onclick="xacNhanXoa(this)"
+                                        th:data-id="${sp.id}"
+                                        th:data-ten="${sp.tenSanPham}"
+                                        th:data-token="${_csrf.token}"
+                                        th:data-param="${_csrf.parameterName}"
+                                        class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr th:if="${danhSachSanPham == null or danhSachSanPham.empty}">
+                            <td colspan="7" class="text-center text-muted py-4">Không có sản phẩm nào</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-white d-flex justify-content-between align-items-center" th:if="${page != null}">
+                    <span class="small text-muted">Tổng <strong th:text="${page.totalElements}">0</strong> sản phẩm</span>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0" th:if="${page.totalPages > 1}">
+                            <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                                <a class="page-link" th:href="@{/quan-ly/san-pham(trang=${page.number-1},tuKhoa=${tuKhoa},danhMucId=${danhMucId},trangThai=${trangThai})}">«</a>
+                            </li>
+                            <li th:each="i : ${#numbers.sequence(0, page.totalPages-1)}" class="page-item"
+                                th:classappend="${i == page.number} ? 'active'">
+                                <a class="page-link" th:href="@{/quan-ly/san-pham(trang=${i},tuKhoa=${tuKhoa},danhMucId=${danhMucId},trangThai=${trangThai})}"
+                                   th:text="${i+1}">1</a>
+                            </li>
+                            <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                                <a class="page-link" th:href="@{/quan-ly/san-pham(trang=${page.number+1},tuKhoa=${tuKhoa},danhMucId=${danhMucId},trangThai=${trangThai})}">»</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal xác nhận xóa -->
+<div class="modal fade" id="xoaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form id="xoaForm" method="post" class="modal-content">
+            <input type="hidden" id="csrfParam" name="_csrf_placeholder"/>
+            <input type="hidden" id="csrfToken_val" value=""/>
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Xóa sản phẩm</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc muốn xóa sản phẩm <strong id="tenXoa"></strong>?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" class="btn btn-danger">Xóa</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function xacNhanXoa(btn) {
+        const id = btn.dataset.id;
+        const ten = btn.dataset.ten;
+        const token = btn.dataset.token;
+        const param = btn.dataset.param;
+        document.getElementById('tenXoa').textContent = ten;
+        document.getElementById('xoaForm').action = '/quan-ly/san-pham/' + id + '/xoa';
+        document.getElementById('csrfParam').name = param;
+        document.getElementById('csrfParam').value = token;
+        new bootstrap.Modal(document.getElementById('xoaModal')).show();
+    }
+</script>
+</body>
+</html>
