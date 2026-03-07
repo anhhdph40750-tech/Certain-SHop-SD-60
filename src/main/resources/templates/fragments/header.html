@@ -1,0 +1,27 @@
+<header th:fragment="header">
+    <a href="/" class="logo">CERTAIN <span>SHOP</span></a>
+
+    <nav>
+        <ul >
+            <li><a th:href="@{/}">TRANG CHỦ</a></li>
+            <li><a href="/home/sanphammoi.html">SẢN PHẨM MỚI</a></li>
+            <li><a href="#">SẢN PHẨM GIẢM GIÁ</a></li>
+            <li><a th:href="@{/san-pham}">ÁO PHÔNG</a></li>
+            <li><a href="#">SET ÁO PHÔNG</a></li>
+            <li><a href="#">LIÊN HỆ</a></li>
+        </ul>
+    </nav>
+
+    <div class="header-right">
+        <div class="auth">
+            <span onclick="openModal()">Đăng nhập</span>
+        </div>
+        <div class="cart">
+            <a th:href="@{/gio-hang}">
+                <i class="fas fa-shopping-cart"></i>
+                <span>0</span>
+            </a>
+        </div>
+        <i class="fas fa-search"></i>
+    </div>
+</header>

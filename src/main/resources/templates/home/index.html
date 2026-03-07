@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi"
+      th:replace="~{layout/main-layout :: layout(pageTitle=~{::title}, pageContent=~{::main})}">
+
+<head>
+    <title>Certain Shop - Trang chủ</title>
+</head>
+
+<body>
+<main>
+    <section class="hero mb-5">
+        <div class="position-relative">
+            <img th:src="@{/img/2-scaled.jpg}" alt="Banner Sale" class="w-100" style="height: 500px; object-fit: cover;">
+            <div class="position-absolute top-50 start-50 translate-middle text-center text-white">
+                <h1 class="display-3 fw-bold" style="text-shadow: 3px 3px 10px #000;">SALE UP TO 70%</h1>
+                <p class="lead fs-3" style="text-shadow: 2px 2px 8px #000;">NHẬN VÀNG TỪ QUỸ VÀ VOUCHER 100K</p>
+                <button class="btn btn-danger btn-lg mt-3 px-5 py-3 fw-bold">MUA NGAY</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Danh mục bên trái + Sản phẩm mới -->
+    <div class="container">
+        <div class="row">
+            <!-- Sidebar danh mục (giống ảnh 2) -->
+            <div class="col-lg-3">
+                <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+            </div>
+
+            <!-- Sản phẩm mới -->
+            <div class="col-lg-9">
+                <h2 class="section-title text-center mb-5">SẢN PHẨM MỚI (ÁO PHÔNG)</h2>
+                <div class="row g-4">
+                    <div class="col-md-4" th:each="sp : ${sanPhams}">
+                        <div class="product-card shadow-sm">
+                            <span class="discount-badge">Giảm 50%</span>
+                            <div class="product-img-wrapper">
+                                <!-- Kiểm tra an toàn để tránh lỗi null -->
+                                <img th:if="${sp.bienTheList != null and not #lists.isEmpty(sp.bienTheList) and sp.bienTheList[0].hinhAnhBienTheList != null and not #lists.isEmpty(sp.bienTheList[0].hinhAnhBienTheList)}"
+                                     th:src="@{${sp.bienTheList[0].hinhAnhBienTheList[0].duongDan}}"
+                                     th:alt="${sp.tenSanPham}"
+                                     alt="Sản phẩm"
+                                     class="img-fluid">
+
+                                <!-- Ảnh mặc định nếu không có ảnh hoặc biến thể -->
+                                <img th:unless="${sp.bienTheList != null and not #lists.isEmpty(sp.bienTheList) and sp.bienTheList[0].hinhAnhBienTheList != null and not #lists.isEmpty(sp.bienTheList[0].hinhAnhBienTheList)}"
+                                     th:src="@{/img/placeholder.jpg}"
+                                     alt="Placeholder"
+                                     class="img-fluid">
+                            </div>
+                            <div class="p-3">
+                                <h5 class="name fw-bold" th:text="${sp.tenSanPham}">Áo Thun Nike</h5>
+                                <p class="price fs-4 fw-bold text-danger"
+                                   th:text="${#numbers.formatDecimal(sp.giaGoc, 0, 0, 'COMMA')} + ' đ'">0 đ</p>
+                                <p class="old-price text-muted text-decoration-line-through"
+                                   th:text="${#numbers.formatDecimal(sp.giaGoc * 1.5, 0, 0, 'COMMA')} + ' đ'">0 đ</p>
+                                <button class="btn btn-danger w-100 mt-2">Thêm vào giỏ</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(sanPhams)}" class="text-center mt-5">
+                    <h4 class="text-muted">Chưa có sản phẩm mới nào</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div th:replace="~{fragments/auth-modal :: authModal}"></div>
+</main>
+</body>
+</html>
