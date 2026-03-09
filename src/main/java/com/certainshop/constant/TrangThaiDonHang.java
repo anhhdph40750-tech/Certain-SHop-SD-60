@@ -10,6 +10,7 @@ public final class TrangThaiDonHang {
     // ===== COD =====
     /** Mới tạo */
     public static final String MOI_TAO = "MOI_TAO";
+    /**shsbd*/
     /** Chờ xác nhận */
     public static final String CHO_XAC_NHAN = "CHO_XAC_NHAN";
     /** Đã xác nhận (trừ kho) */
