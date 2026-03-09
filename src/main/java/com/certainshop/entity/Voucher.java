@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Table(name = "Voucher")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Voucher {
-// upgain check active
+// test
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "Id")
