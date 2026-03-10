@@ -20,7 +20,7 @@ public class GioHangService {
     private final GioHangChiTietRepository gioHangChiTietRepository;
     private final BienTheRepository bienTheRepository;
 
-    @Value("${app.sanpham.soLuongMuaToiDa:5}")
+    @Value("${app.sanpham.soLuongMuaToiDa:100}")
     private int soLuongMuaToiDa;
 
     /**
