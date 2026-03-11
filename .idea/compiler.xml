@@ -8,7 +8,6 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="ban-ao-phong" />
-        <module name="certainshop-be" />
       </profile>
     </annotationProcessing>
   </component>

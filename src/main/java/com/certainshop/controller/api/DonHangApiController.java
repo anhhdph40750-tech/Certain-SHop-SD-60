@@ -104,8 +104,12 @@ public class DonHangApiController {
             if (donHang.getNguoiDung() == null || !donHang.getNguoiDung().getId().equals(nd.getId())) {
                 return ResponseEntity.status(403).body(ApiResponse.loi("Không có quyền hủy đơn hàng này"));
             }
-            if (!TrangThaiDonHang.CHO_XAC_NHAN.equals(donHang.getTrangThaiDonHang())) {
-                return ResponseEntity.badRequest().body(ApiResponse.loi("Chỉ có thể hủy đơn hàng đang chờ xác nhận"));
+            if (!(TrangThaiDonHang.CHO_XAC_NHAN.equals(donHang.getTrangThaiDonHang())
+                    || TrangThaiDonHang.DA_XAC_NHAN.equals(donHang.getTrangThaiDonHang())
+                    || TrangThaiDonHang.DANG_XU_LY.equals(donHang.getTrangThaiDonHang()))) {
+
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.loi("Không thể hủy đơn hàng ở trạng thái này"));
             }
             donHangService.khachHuyDon(donHang.getId(), "Khách hàng tự hủy", nd.getId());
             return ResponseEntity.ok(ApiResponse.ok("Đã hủy đơn hàng thành công", null));

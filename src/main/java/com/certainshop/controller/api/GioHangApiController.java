@@ -123,6 +123,7 @@ public class GioHangApiController {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("id", ct.getId());
         m.put("soLuong", ct.getSoLuong());
+
         
         // Safely get price with complete fallback chain — never allow null
         BigDecimal donGia = ct.getDonGia();
@@ -149,6 +150,7 @@ public class GioHangApiController {
             Map<String, Object> btMap = new LinkedHashMap<>();
             btMap.put("id", bt.getId());
             btMap.put("soLuongTon", bt.getSoLuongTon());
+            btMap.put("gia", bt.getGia());
             btMap.put("anhChinh", bt.getAnhChinh());
             if (bt.getSanPham() != null) {
                 btMap.put("tenSanPham", bt.getSanPham().getTenSanPham());

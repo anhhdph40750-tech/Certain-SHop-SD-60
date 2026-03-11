@@ -291,8 +291,7 @@ public class DonHangService {
         String trangThai = donHang.getTrangThaiDonHang();
         boolean coQuyen = TrangThaiDonHang.CHO_XAC_NHAN.equals(trangThai)
                 || TrangThaiDonHang.DA_XAC_NHAN.equals(trangThai)
-                || TrangThaiDonHang.CHO_THANH_TOAN.equals(trangThai)
-                || TrangThaiDonHang.DA_THANH_TOAN.equals(trangThai);
+                || TrangThaiDonHang.DANG_XU_LY.equals(trangThai);
 
         if (!coQuyen) {
             throw new IllegalArgumentException("Bạn không thể hủy đơn hàng ở trạng thái: " +
@@ -301,7 +300,7 @@ public class DonHangService {
 
         // Nếu đã trừ kho thì rollback
         if (TrangThaiDonHang.DA_XAC_NHAN.equals(trangThai)
-                || TrangThaiDonHang.DA_THANH_TOAN.equals(trangThai)) {
+                || TrangThaiDonHang.DANG_XU_LY.equals(trangThai)) {
             rollbackKho(donHang);
         }
 
