@@ -51,6 +51,11 @@ public class SanPhamService {
             thuongHieu = thuongHieuRepository.findById(dto.getThuongHieuId()).orElse(null);
         }
 
+        ChatLieu chatLieu = null;
+        if (dto.getChatLieuId() != null) {
+            chatLieu = chatLieuRepository.findById(dto.getChatLieuId()).orElse(null);
+        }
+
         SanPham sanPham = SanPham.builder()
                 .tenSanPham(dto.getTenSanPham())
                 .duongDan(taoDuongDan(dto.getTenSanPham()))
@@ -59,6 +64,7 @@ public class SanPhamService {
                 .giaBan(dto.getGiaGoc()) // giaBan defaults to giaGoc
                 .danhMuc(danhMuc)
                 .thuongHieu(thuongHieu)
+                .chatLieu(chatLieu)
                 .trangThaiSanPham(Boolean.FALSE.equals(dto.getTrangThai()) ? "NGUNG_BAN" : "DANG_BAN")
                 .build();
 
@@ -91,6 +97,11 @@ public class SanPhamService {
             thuongHieu = thuongHieuRepository.findById(dto.getThuongHieuId()).orElse(null);
         }
 
+        ChatLieu chatLieu = null;
+        if (dto.getChatLieuId() != null) {
+            chatLieu = chatLieuRepository.findById(dto.getChatLieuId()).orElse(null);
+        }
+
         sanPham.setTenSanPham(dto.getTenSanPham());
         sanPham.setDuongDan(taoDuongDan(dto.getTenSanPham()));
         sanPham.setMoTa(dto.getMoTaChiTiet());
@@ -98,6 +109,7 @@ public class SanPhamService {
         sanPham.setGiaBan(dto.getGiaGoc()); // giaBan defaults to giaGoc
         sanPham.setDanhMuc(danhMuc);
         sanPham.setThuongHieu(thuongHieu);
+        sanPham.setChatLieu(chatLieu);
         sanPham.setTrangThai(dto.getTrangThai() != null ? dto.getTrangThai() : true);
 
         return sanPhamRepository.save(sanPham);

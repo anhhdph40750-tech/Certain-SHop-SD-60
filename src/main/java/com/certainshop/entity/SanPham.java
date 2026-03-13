@@ -6,6 +6,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Thông tin sản phẩm (cấp sản phẩm, không bao gồm biến thể)
+ */
+
 @Entity
 @Table(name = "SanPham")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -38,6 +42,10 @@ public class SanPham {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ThuongHieuId")
     private ThuongHieu thuongHieu;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "ChatLieuId")
+    private ChatLieu chatLieu;
 
     @Column(name = "AnhChinh", length = 500)
     private String anhChinh;
