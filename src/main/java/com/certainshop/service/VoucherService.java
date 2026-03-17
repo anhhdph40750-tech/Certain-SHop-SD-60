@@ -89,6 +89,20 @@ public class VoucherService {
     }
 
     /**
+     * Giảm số lần sử dụng voucher (khi hủy đơn)
+     */
+    public void giamSoLanSuDung(String maVoucher) {
+        Optional<Voucher> voucherOpt = timTheoMa(maVoucher);
+        if (voucherOpt.isPresent()) {
+            Voucher voucher = voucherOpt.get();
+            int current = voucher.getSoLuongSuDung() != null ? voucher.getSoLuongSuDung() : 0;
+            voucher.setSoLuongSuDung(Math.max(0, current - 1));
+            voucherRepository.save(voucher);
+            log.info("[Voucher] Đã giảm lần sử dụng: {} (total: {})", maVoucher, voucher.getSoLuongSuDung());
+        }
+    }
+
+    /**
      * Tạo voucher mới (admin only)
      */
     public Voucher taoVoucher(Voucher voucher) {

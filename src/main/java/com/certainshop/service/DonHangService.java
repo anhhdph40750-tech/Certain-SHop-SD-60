@@ -32,6 +32,7 @@ public class DonHangService {
     private final GioHangRepository gioHangRepository;
     private final GioHangChiTietRepository gioHangChiTietRepository;
     private final KhuyenMaiService khuyenMaiService;
+    private final VoucherService voucherService;
     private final DiaChiNguoiDungRepository diaChiRepository;
     private final MailService mailService;
 
@@ -63,14 +64,35 @@ public class DonHangService {
                 .map(GioHangChiTiet::getThanhTien)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Áp dụng voucher
+        // Áp dụng giảm giá (KhuyenMai hoặc Voucher)
         BigDecimal soTienGiam = BigDecimal.ZERO;
         KhuyenMai khuyenMai = null;
-        if (dto.getKhuyenMaiId() != null) {
-            khuyenMai = khuyenMaiService.timTheoId(dto.getKhuyenMaiId())
-                    .orElse(null);
+        Voucher voucher = null;
+
+        boolean hasKhuyenMai = dto.getKhuyenMaiId() != null;
+        boolean hasVoucher = dto.getMaVoucher() != null && !dto.getMaVoucher().isBlank();
+        if (hasKhuyenMai && hasVoucher) {
+            throw new IllegalArgumentException("Chỉ được áp dụng 1 loại giảm giá (khuyến mãi hoặc voucher)");
+        }
+
+        if (hasKhuyenMai) {
+            khuyenMai = khuyenMaiService.timTheoId(dto.getKhuyenMaiId()).orElse(null);
             if (khuyenMai != null && khuyenMai.laHopLe()) {
                 soTienGiam = khuyenMai.tinhSoTienGiam(tongTien);
+            } else {
+                throw new IllegalArgumentException("Khuyến mãi không hợp lệ hoặc đã hết hạn");
+            }
+        }
+
+        if (hasVoucher) {
+            String maVoucher = dto.getMaVoucher().trim().toUpperCase();
+            voucher = voucherService.timTheoMa(maVoucher).orElse(null);
+            if (voucher == null || !voucher.isValid()) {
+                throw new IllegalArgumentException("Voucher không hợp lệ hoặc đã hết hạn");
+            }
+            soTienGiam = voucher.tinhGiaTriGiam(tongTien);
+            if (soTienGiam.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Voucher không áp dụng được cho đơn hàng này");
             }
         }
 
@@ -124,6 +146,7 @@ public class DonHangService {
                 .loaiDonHang("ONLINE")
                 .phuongThucThanhToan(dto.getPhuongThucThanhToan())
                 .khuyenMai(khuyenMai)
+                .voucher(voucher)
                 .tenNguoiNhan(tenNguoiNhan)
                 .sdtNguoiNhan(sdt)
                 .diaChiGiaoHang(buildDiaChiDayDu(diaChiCuThe, tenXa, tenHuyen, tenTinh))
@@ -163,9 +186,12 @@ public class DonHangService {
         // Ghi lịch sử trạng thái
         ghiLichSuTrangThai(donHang, null, trangThaiDau, "Đặt hàng thành công", nguoiDung);
 
-        // Tăng số lần sử dụng voucher
+        // Tăng số lần sử dụng giảm giá
         if (khuyenMai != null) {
             khuyenMaiService.tangSoLanSuDung(khuyenMai.getId());
+        }
+        if (voucher != null) {
+            voucherService.tangSoLanSuDung(voucher.getMaVoucher());
         }
 
         // Lưu địa chỉ mới nếu yêu cầu
@@ -301,6 +327,9 @@ public class DonHangService {
         if (donHang.getKhuyenMai() != null) {
             khuyenMaiService.giamSoLanSuDung(donHang.getKhuyenMai().getId());
         }
+        if (donHang.getVoucher() != null) {
+            voucherService.giamSoLanSuDung(donHang.getVoucher().getMaVoucher());
+        }
 
         donHang.setTrangThaiDonHang(TrangThaiDonHang.DA_HUY);
         donHang = donHangRepository.save(donHang);
@@ -348,6 +377,9 @@ public class DonHangService {
 
         if (donHang.getKhuyenMai() != null) {
             khuyenMaiService.giamSoLanSuDung(donHang.getKhuyenMai().getId());
+        }
+        if (donHang.getVoucher() != null) {
+            voucherService.giamSoLanSuDung(donHang.getVoucher().getMaVoucher());
         }
 
         donHang.setTrangThaiDonHang(TrangThaiDonHang.DA_HUY);
@@ -604,6 +636,9 @@ public class DonHangService {
                 ghiLichSuTrangThai(donHang, TrangThaiDonHang.CHO_THANH_TOAN, TrangThaiDonHang.DA_HUY, "Tự động hủy - quá hạn thanh toán VNPay", null);
                 if (donHang.getKhuyenMai() != null) {
                     khuyenMaiService.giamSoLanSuDung(donHang.getKhuyenMai().getId());
+                }
+                if (donHang.getVoucher() != null) {
+                    voucherService.giamSoLanSuDung(donHang.getVoucher().getMaVoucher());
                 }
                 log.info("Tự động hủy đơn VNPay hết hạn: {}", donHang.getMaDonHang());
             } catch (Exception e) {

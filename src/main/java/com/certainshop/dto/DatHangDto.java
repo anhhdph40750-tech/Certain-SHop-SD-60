@@ -37,6 +37,9 @@ public class DatHangDto {
 
     private Long khuyenMaiId;
 
+    // Mã voucher (Voucher entity) - frontend gửi lên khi áp dụng voucher
+    private String maVoucher;
+
     private String ghiChu;
 
     private Boolean luuDiaChi = false;
