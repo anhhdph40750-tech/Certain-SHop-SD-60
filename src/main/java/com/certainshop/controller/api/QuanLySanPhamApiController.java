@@ -55,7 +55,7 @@ public class QuanLySanPhamApiController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> chiTiet(@PathVariable Long id) {
         return sanPhamService.timTheoId(id)
                 .map(sp -> {
-                    List<BienThe> bienThe = sanPhamService.danhSachBienTheCuaSanPhamQuanLy(id);
+                    List<BienThe> bienThe = sanPhamService.danhSachBienTheCuaSanPham(id);
                     Map<String, Object> data = Map.of("sanPham", sp, "bienThe", bienThe);
                     return ResponseEntity.ok(ApiResponse.ok(data));
                 })
