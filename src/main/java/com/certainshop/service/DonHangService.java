@@ -341,7 +341,8 @@ public class DonHangService {
                 || TrangThaiDonHang.DA_XAC_NHAN.equals(trangThai)
                 || TrangThaiDonHang.DANG_XU_LY.equals(trangThai)
                 || TrangThaiDonHang.CHO_THANH_TOAN.equals(trangThai)
-                || TrangThaiDonHang.DA_THANH_TOAN.equals(trangThai);
+                || TrangThaiDonHang.DA_THANH_TOAN.equals(trangThai)
+                || TrangThaiDonHang.DANG_GIAO.equals(trangThai);
 
         if (!coQuyen) {
             throw new IllegalArgumentException("Không thể hủy đơn ở trạng thái: " + TrangThaiDonHang.layNhan(trangThai));
@@ -349,7 +350,8 @@ public class DonHangService {
 
         if (TrangThaiDonHang.DA_XAC_NHAN.equals(trangThai)
                 || TrangThaiDonHang.DANG_XU_LY.equals(trangThai)
-                || TrangThaiDonHang.DA_THANH_TOAN.equals(trangThai)) {
+                || TrangThaiDonHang.DA_THANH_TOAN.equals(trangThai)
+                || TrangThaiDonHang.DANG_GIAO.equals(trangThai)){
             rollbackKho(donHang);
         }
 
