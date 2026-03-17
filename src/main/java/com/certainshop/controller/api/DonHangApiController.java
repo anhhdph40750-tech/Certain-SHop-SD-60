@@ -172,11 +172,20 @@ public class DonHangApiController {
         try {
             String trangThaiMoi = body.get("trangThai");
             String ghiChu = body.getOrDefault("ghiChu", "");
+
             NguoiDung nd = layNguoiDung(auth);
+
             DonHang donHang = donHangRepository.findByMaDonHang(maDonHang)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
-            donHangService.chuyenTrangThai(donHang.getId(), trangThaiMoi, ghiChu, nd.getId());
+
+            if (TrangThaiDonHang.DA_HUY.equals(trangThaiMoi)) {
+                donHangService.nhanVienHuyDon(donHang.getId(), ghiChu, nd.getId());
+            } else {
+                donHangService.chuyenTrangThai(donHang.getId(), trangThaiMoi, ghiChu, nd.getId());
+            }
+
             return ResponseEntity.ok(ApiResponse.ok("Đã cập nhật trạng thái", null));
+
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.loi(e.getMessage()));
         }
