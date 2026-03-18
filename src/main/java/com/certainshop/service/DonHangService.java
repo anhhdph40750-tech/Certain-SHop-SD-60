@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -567,8 +568,12 @@ public class DonHangService {
     }
 
     @Transactional(readOnly = true)
-    public List<DonHang> layDonHangCuaKhach(Long nguoiDungId) {
-        return donHangRepository.findByNguoiDungIdOrderByThoiGianTaoDesc(nguoiDungId);
+    public List<DonHang> layDonHangCuaKhach(Long nguoiDungId, String sortType) {
+        Sort sort = sortType.equalsIgnoreCase("asc")
+                ? Sort.by("thoiGianTao").ascending()
+                : Sort.by("thoiGianTao").descending();
+
+        return donHangRepository.findByNguoiDungId(nguoiDungId, sort);
     }
 
     @Transactional(readOnly = true)
