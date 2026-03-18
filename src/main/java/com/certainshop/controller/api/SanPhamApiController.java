@@ -178,6 +178,13 @@ public class SanPhamApiController {
             th.put("tenThuongHieu", sp.getThuongHieu().getTenThuongHieu() != null ? sp.getThuongHieu().getTenThuongHieu() : "");
             m.put("thuongHieu", th);
         }
+        if (sp.getChatLieu() != null) {
+            Map<String, Object> cl = new LinkedHashMap<>();
+            cl.put("id", sp.getChatLieu().getId());
+            cl.put("tenChatLieu", sp.getChatLieu().getTenChatLieu() != null ? sp.getChatLieu().getTenChatLieu() : "");
+            cl.put("moTa", sp.getChatLieu().getMoTa() != null ? sp.getChatLieu().getMoTa() : "");
+            m.put("chatLieu", cl);
+        }
         return m;
     }
 

@@ -3,7 +3,6 @@ package com.certainshop.repository;
 import com.certainshop.entity.DonHang;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,12 +18,12 @@ public interface DonHangRepository extends JpaRepository<DonHang, Long> {
     Optional<DonHang> findByMaDonHang(String maDonHang);
 
     // Đơn hàng của khách hàng
-    Page<DonHang> findByNguoiDungIdAndLoaiDonHang(
+    Page<DonHang> findByNguoiDungIdAndLoaiDonHangOrderByThoiGianTaoDesc(
             Long nguoiDungId, String loaiDonHang, Pageable pageable);
 
-    List<DonHang> findByNguoiDungId(Long nguoiDungId, Sort sort);
+    List<DonHang> findByNguoiDungIdOrderByThoiGianTaoDesc(Long nguoiDungId);
 
-    Page<DonHang> findByNguoiDungId(Long nguoiDungId, Pageable pageable);
+    Page<DonHang> findByNguoiDungIdOrderByThoiGianTaoDesc(Long nguoiDungId, Pageable pageable);
 
     @Query("SELECT dh FROM DonHang dh WHERE " +
            "(:trangThai IS NULL OR dh.trangThaiDonHang = :trangThai) " +

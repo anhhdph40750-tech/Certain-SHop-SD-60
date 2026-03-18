@@ -51,6 +51,11 @@ public class SanPhamService {
             thuongHieu = thuongHieuRepository.findById(dto.getThuongHieuId()).orElse(null);
         }
 
+        ChatLieu chatLieu = null;
+        if (dto.getChatLieuId() != null) {
+            chatLieu = chatLieuRepository.findById(dto.getChatLieuId()).orElse(null);
+        }
+
         SanPham sanPham = SanPham.builder()
                 .tenSanPham(dto.getTenSanPham())
                 .duongDan(taoDuongDan(dto.getTenSanPham()))
@@ -59,6 +64,7 @@ public class SanPhamService {
                 .giaBan(dto.getGiaGoc()) // giaBan defaults to giaGoc
                 .danhMuc(danhMuc)
                 .thuongHieu(thuongHieu)
+                .chatLieu(chatLieu)
                 .trangThaiSanPham(Boolean.FALSE.equals(dto.getTrangThai()) ? "NGUNG_BAN" : "DANG_BAN")
                 .build();
 
@@ -91,6 +97,11 @@ public class SanPhamService {
             thuongHieu = thuongHieuRepository.findById(dto.getThuongHieuId()).orElse(null);
         }
 
+        ChatLieu chatLieu = null;
+        if (dto.getChatLieuId() != null) {
+            chatLieu = chatLieuRepository.findById(dto.getChatLieuId()).orElse(null);
+        }
+
         sanPham.setTenSanPham(dto.getTenSanPham());
         sanPham.setDuongDan(taoDuongDan(dto.getTenSanPham()));
         sanPham.setMoTa(dto.getMoTaChiTiet());
@@ -98,6 +109,7 @@ public class SanPhamService {
         sanPham.setGiaBan(dto.getGiaGoc()); // giaBan defaults to giaGoc
         sanPham.setDanhMuc(danhMuc);
         sanPham.setThuongHieu(thuongHieu);
+        sanPham.setChatLieu(chatLieu);
         sanPham.setTrangThai(dto.getTrangThai() != null ? dto.getTrangThai() : true);
 
         return sanPhamRepository.save(sanPham);
@@ -109,16 +121,16 @@ public class SanPhamService {
     public void xoaSanPham(Long id) {
         SanPham sanPham = sanPhamRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
-
+        
         // Xóa tất cả ảnh liên quan
         List<BienThe> bienThes = bienTheRepository.findBySanPhamId(id);
         for (BienThe bt : bienThes) {
             hinhAnhBienTheRepository.deleteByBienTheId(bt.getId());
         }
-
+        
         // Xóa tất cả biến thể
         bienTheRepository.deleteAll(bienThes);
-
+        
         // Xóa sản phẩm
         sanPhamRepository.delete(sanPham);
     }
@@ -173,27 +185,27 @@ public class SanPhamService {
     public List<BienThe> taoBulkBienThe(Long sanPhamId, List<BienTheDto> danhSach) {
         SanPham sanPham = sanPhamRepository.findById(sanPhamId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
-
+        
         List<BienThe> result = new ArrayList<>();
         boolean daDatMacDinh = false;
-
+        
         // Kiểm tra xem có biến thể mặc định nào chưa
         List<BienThe> existingVariants = bienTheRepository.findBySanPhamId(sanPhamId);
         daDatMacDinh = existingVariants.stream().anyMatch(BienThe::getMacDinh);
-
+        
         for (int i = 0; i < danhSach.size(); i++) {
             BienTheDto dto = danhSach.get(i);
             dto.setSanPhamId(sanPhamId);
-
+            
             // Nếu chưa có biến thể mặc định, set biến thể đầu tiên làm mặc định
             if (!daDatMacDinh && i == 0) {
                 dto.setMacDinh(true);
                 daDatMacDinh = true;
             }
-
+            
             result.add(taoBienThe(sanPhamId, dto));
         }
-
+        
         return result;
     }
 
@@ -261,7 +273,7 @@ public class SanPhamService {
      * Upload ảnh biến thể
      */
     public HinhAnhBienThe uploadAnhBienThe(Long bienTheId, MultipartFile file,
-                                           boolean laAnhChinh, String uploadDir) throws IOException {
+                                            boolean laAnhChinh, String uploadDir) throws IOException {
         BienThe bienThe = bienTheRepository.findById(bienTheId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy biến thể"));
 
@@ -312,13 +324,13 @@ public class SanPhamService {
 
     @Transactional(readOnly = true)
     public Page<SanPham> timKiemChoKhachHang(String tuKhoa, Long danhMucId,
-                                             Long thuongHieuId, Pageable pageable) {
+                                               Long thuongHieuId, Pageable pageable) {
         return sanPhamRepository.timKiemVaLoc(tuKhoa, danhMucId, thuongHieuId, pageable);
     }
 
     @Transactional(readOnly = true)
     public Page<SanPham> timKiemAdmin(String tuKhoa, Long danhMucId,
-                                      Long thuongHieuId, Boolean trangThai, Pageable pageable) {
+                                       Long thuongHieuId, Boolean trangThai, Pageable pageable) {
         String trangThaiStr = trangThai == null ? null : (trangThai ? "DANG_BAN" : "NGUNG_BAN");
         return sanPhamRepository.timKiemAdmin(tuKhoa, danhMucId, thuongHieuId, trangThaiStr, pageable);
     }

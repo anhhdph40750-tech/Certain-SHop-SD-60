@@ -25,13 +25,10 @@ public class QuanLyNguoiDungApiController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> danhSach(
             @RequestParam(defaultValue = "") String tuKhoa,
             @RequestParam(defaultValue = "0") int trang,
-            @RequestParam(defaultValue = "20") int kichThuocTrang,
-            @RequestParam(required = false) String tenVaiTro) {
+            @RequestParam(defaultValue = "20") int kichThuocTrang) {
         Pageable pageable = PageRequest.of(trang, kichThuocTrang);
-        String tuKhoaFilter = tuKhoa.isEmpty() ? null : tuKhoa;
-        Page<NguoiDung> page = (tenVaiTro != null && !tenVaiTro.isBlank())
-                ? nguoiDungService.timKiem(tuKhoaFilter, tenVaiTro, pageable)
-                : nguoiDungService.timKiem(tuKhoaFilter, pageable);
+        Page<NguoiDung> page = nguoiDungService.timKiem(
+                tuKhoa.isEmpty() ? null : tuKhoa, pageable);
         Map<String, Object> result = Map.of(
                 "nguoiDung", page.getContent(),
                 "tongSo", page.getTotalElements(),
@@ -102,4 +99,3 @@ public class QuanLyNguoiDungApiController {
         }
     }
 }
-

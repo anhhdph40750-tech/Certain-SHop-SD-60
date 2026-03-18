@@ -3,12 +3,14 @@ com\certainshop\entity\GioHang.class
 com\certainshop\controller\quanly\NguoiDungQLController.class
 com\certainshop\repository\ChatLieuRepository.class
 com\certainshop\repository\GioHangChiTietRepository.class
+com\certainshop\repository\VoucherRepository.class
 com\certainshop\controller\api\QuanLyThuocTinhApiController.class
 com\certainshop\dto\ApiResponse$ApiResponseBuilder.class
 com\certainshop\controller\api\DonHangApiController.class
 com\certainshop\service\SanPhamService.class
 com\certainshop\service\ThongKeService.class
 com\certainshop\controller\api\QuanLyNguoiDungApiController.class
+com\certainshop\service\VoucherService.class
 com\certainshop\entity\DiaChiNguoiDung$DiaChiNguoiDungBuilder.class
 com\certainshop\repository\NguoiDungRepository.class
 com\certainshop\controller\DonHangKhachController.class
@@ -20,6 +22,7 @@ com\certainshop\entity\HinhAnhBienThe.class
 com\certainshop\entity\KichThuoc$KichThuocBuilder.class
 com\certainshop\controller\api\QuanLyThongKeApiController.class
 com\certainshop\dto\DangKyDto.class
+com\certainshop\dto\GHNPhiVanChuyenDto$GHNPhiVanChuyenDtoBuilder.class
 com\certainshop\entity\BienThe.class
 com\certainshop\entity\DanhGia.class
 com\certainshop\service\DonHangService.class
@@ -27,14 +30,19 @@ com\certainshop\dto\DatHangDto.class
 com\certainshop\repository\GioHangRepository.class
 com\certainshop\entity\ThuongHieu$ThuongHieuBuilder.class
 com\certainshop\controller\TrangChuController.class
+com\certainshop\service\MailService.class
+com\certainshop\entity\Voucher.class
 com\certainshop\entity\SanPham.class
 com\certainshop\entity\ChiTietDonHang$ChiTietDonHangBuilder.class
 com\certainshop\entity\GioHang$GioHangBuilder.class
 com\certainshop\controller\TaiKhoanController.class
 com\certainshop\repository\SanPhamRepository.class
 com\certainshop\dto\DangKyDto$DangKyDtoBuilder.class
+com\certainshop\dto\DiaChiChiTietDto.class
 com\certainshop\entity\DiaChiNguoiDung.class
 com\certainshop\dto\BienTheDto$BienTheDtoBuilder.class
+com\certainshop\controller\api\VoucherApiController.class
+com\certainshop\dto\DiaChiChiTietDto$DiaChiChiTietDtoBuilder.class
 com\certainshop\config\BaoMatConfig.class
 com\certainshop\controller\api\DiaChiApiController.class
 com\certainshop\controller\quanly\DonHangQLController.class
@@ -57,6 +65,7 @@ com\certainshop\util\NguoiDungHienTai.class
 com\certainshop\service\GHNApiService.class
 com\certainshop\CertainShopApplication.class
 com\certainshop\service\KhuyenMaiService.class
+com\certainshop\dto\GHNPhiVanChuyenDto.class
 com\certainshop\controller\api\SanPhamApiController.class
 com\certainshop\controller\api\AuthApiController.class
 com\certainshop\controller\XacThucController.class
@@ -65,6 +74,7 @@ com\certainshop\constant\TrangThaiDonHang.class
 com\certainshop\repository\DanhGiaRepository.class
 com\certainshop\util\VNPayUtil.class
 com\certainshop\entity\KichThuoc.class
+com\certainshop\entity\Voucher$VoucherBuilder.class
 com\certainshop\config\GlobalExceptionHandler.class
 com\certainshop\entity\ChatLieu$ChatLieuBuilder.class
 com\certainshop\entity\VaiTro.class
@@ -103,6 +113,7 @@ com\certainshop\entity\VaiTro$VaiTroBuilder.class
 com\certainshop\entity\ChatLieu.class
 com\certainshop\entity\BienThe$BienTheBuilder.class
 com\certainshop\entity\DanhGia$DanhGiaBuilder.class
+com\certainshop\controller\api\GHNApiController.class
 com\certainshop\repository\ThuongHieuRepository.class
 com\certainshop\controller\quanly\KhuyenMaiQLController.class
 com\certainshop\repository\KichThuocRepository.class

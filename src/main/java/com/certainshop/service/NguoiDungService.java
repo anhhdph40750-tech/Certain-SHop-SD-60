@@ -31,7 +31,7 @@ public class NguoiDungService {
     private final MailService mailService;
 
     /**
-     *      * Đăng ký tài khoản khách hàng mới
+     * Đăng ký tài khoản khách hàng mới
      */
     public NguoiDung dangKy(DangKyDto dto) {
         // Validate trùng
@@ -153,11 +153,6 @@ public class NguoiDungService {
         return nguoiDungRepository.timKiem(tuKhoa, pageable);
     }
 
-    @Transactional(readOnly = true)
-    public Page<NguoiDung> timKiem(String tuKhoa, String tenVaiTro, Pageable pageable) {
-        return nguoiDungRepository.timKiem(tuKhoa, tenVaiTro, pageable);
-    }
-
     /**
      * Tạo tài khoản nhân viên (admin)
      */
@@ -189,7 +184,7 @@ public class NguoiDungService {
 
         // Không cho khoá tài khoản admin cố định (ID = 1)
         if (id == 1L && !dangHoatDong) {
-            throw new IllegalArgumentException("Không thể khóa tài khoản Admin gốc");
+            throw new IllegalArgumentException("Không thể khoá tài khoản Admin gốc");
         }
 
         nguoiDung.setDangHoatDong(dangHoatDong);
@@ -231,4 +226,3 @@ public class NguoiDungService {
         return nguoiDungRepository.findByTenVaiTro(tenVaiTro, pageable);
     }
 }
-

@@ -6,6 +6,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Thông tin sản phẩm (cấp sản phẩm, không bao gồm biến thể)
+ */
+
 @Entity
 @Table(name = "SanPham")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -39,6 +43,10 @@ public class SanPham {
     @JoinColumn(name = "ThuongHieuId")
     private ThuongHieu thuongHieu;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "ChatLieuId")
+    private ChatLieu chatLieu;
+
     @Column(name = "AnhChinh", length = 500)
     private String anhChinh;
 
@@ -66,16 +74,12 @@ public class SanPham {
     }
 
     public void setTrangThai(boolean active) {
-        // Update BOTH the Boolean flag AND the status string
-        this.trangThai = active;  //  Set soft-delete flag
-        this.trangThaiSanPham = active ? "DANG_BAN" : "NGUNG_BAN";  //  Set status
+        this.trangThaiSanPham = active ? "DANG_BAN" : "NGUNG_BAN";
     }
 
     @PrePersist
     protected void truocKhiTao() {
-        LocalDateTime now = LocalDateTime.now();
-        thoiGianTao = now;
-        thoiGianCapNhat = now;  // Set on creation too
+        thoiGianTao = LocalDateTime.now();
         if (trangThaiSanPham == null) trangThaiSanPham = "DANG_BAN";
         if (trangThai == null) trangThai = true;
     }

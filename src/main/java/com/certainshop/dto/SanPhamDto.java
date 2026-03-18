@@ -28,6 +28,8 @@ public class SanPhamDto {
 
     private Long thuongHieuId;
 
+    private Long chatLieuId;
+
     private Boolean trangThai = true;
 
     // Danh sách biến thể

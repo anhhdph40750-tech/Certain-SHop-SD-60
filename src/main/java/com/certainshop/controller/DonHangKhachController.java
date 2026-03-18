@@ -32,18 +32,10 @@ public class DonHangKhachController {
     private String feUrl;
 
     @GetMapping("/don-hang/cua-toi")
-    public String danhSachDonHang(
-            @RequestParam(defaultValue = "desc") String sort,
-            Model model
-    ) {
+    public String danhSachDonHang(Model model) {
         NguoiDung nguoiDung = nguoiDungHienTai.layBatBuoc();
-
-        List<DonHang> danhSach = donHangService
-                .layDonHangCuaKhach(nguoiDung.getId(), sort);
-
+        List<DonHang> danhSach = donHangService.layDonHangCuaKhach(nguoiDung.getId());
         model.addAttribute("danhSachDonHang", danhSach);
-        model.addAttribute("sort", sort); // 👈 để giữ trạng thái UI
-
         return "khach/don-hang-cua-toi";
     }
 

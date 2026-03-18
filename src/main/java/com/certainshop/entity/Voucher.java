@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Table(name = "Voucher")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Voucher {
-//out tai khoan lam
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "Id")
@@ -63,7 +63,7 @@ public class Voucher {
     protected void onCreate() {
         LocalDateTime now = LocalDateTime.now();
         thoiGianTao = now;
-        thoiGianCapNhat = now;  // Set on creation too, not just on update
+        if (thoiGianCapNhat == null) thoiGianCapNhat = now;
         if (trangThai == null) trangThai = true;
     }
 

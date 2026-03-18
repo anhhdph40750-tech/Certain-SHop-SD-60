@@ -70,7 +70,7 @@ public class GioHangService {
             if (soLuongMoi > soLuongMuaToiDa) {
                 throw new IllegalArgumentException(
                         "Chỉ được mua tối đa " + soLuongMuaToiDa +
-                                " sản phẩm. Liên hệ " + "SĐT 0123456789 nếu cần mua số lượng lớn hơn.");
+                        " sản phẩm. Liên hệ " + "SĐT 0123456789 nếu cần mua số lượng lớn hơn.");
             }
 
             // Kiểm tra tồn kho

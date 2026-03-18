@@ -89,6 +89,20 @@ public class VoucherService {
     }
 
     /**
+     * Giảm số lần sử dụng voucher (khi hủy đơn)
+     */
+    public void giamSoLanSuDung(String maVoucher) {
+        Optional<Voucher> voucherOpt = timTheoMa(maVoucher);
+        if (voucherOpt.isPresent()) {
+            Voucher voucher = voucherOpt.get();
+            int current = voucher.getSoLuongSuDung() != null ? voucher.getSoLuongSuDung() : 0;
+            voucher.setSoLuongSuDung(Math.max(0, current - 1));
+            voucherRepository.save(voucher);
+            log.info("[Voucher] Đã giảm lần sử dụng: {} (total: {})", maVoucher, voucher.getSoLuongSuDung());
+        }
+    }
+
+    /**
      * Tạo voucher mới (admin only)
      */
     public Voucher taoVoucher(Voucher voucher) {
@@ -105,18 +119,10 @@ public class VoucherService {
             throw new IllegalArgumentException("Loại giảm phải là PERCENT hoặc FIXED");
         }
 
-        // Validate discount value based on type
-        if ("PERCENT".equals(voucher.getLoaiGiam())) {
-            // For percentage: must be between 0 and 100
-            if (voucher.getGiaTriGiam().compareTo(BigDecimal.ZERO) <= 0 ||
+        if ("PERCENT".equals(voucher.getLoaiGiam()) &&
+                voucher.getGiaTriGiam().compareTo(BigDecimal.ZERO) <= 0 ||
                 voucher.getGiaTriGiam().compareTo(new BigDecimal("100")) > 0) {
-                throw new IllegalArgumentException("Giá trị giảm (%) phải từ 1 đến 100");
-            }
-        } else if ("FIXED".equals(voucher.getLoaiGiam())) {
-            // For fixed amount: must be greater than 0
-            if (voucher.getGiaTriGiam().compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException("Giá trị giảm (đ) phải lớn hơn 0");
-            }
+            throw new IllegalArgumentException("Giá trị giảm (%) phải từ 0 đến 100");
         }
 
         return voucherRepository.save(voucher);
@@ -128,30 +134,6 @@ public class VoucherService {
     public Voucher capNhatVoucher(Long id, Voucher updates) {
         Voucher voucher = voucherRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Voucher không tồn tại"));
-
-        // Validate date range
-        if (updates.getNgayBatDau().isAfter(updates.getNgayKetThuc())) {
-            throw new IllegalArgumentException("Ngày bắt đầu phải trước ngày kết thúc");
-        }
-
-        // Validate discount type
-        if (!"PERCENT".equals(updates.getLoaiGiam()) && !"FIXED".equals(updates.getLoaiGiam())) {
-            throw new IllegalArgumentException("Loại giảm phải là PERCENT hoặc FIXED");
-        }
-
-        // Validate discount value based on type
-        if ("PERCENT".equals(updates.getLoaiGiam())) {
-            // For percentage: must be between 0 and 100
-            if (updates.getGiaTriGiam().compareTo(BigDecimal.ZERO) <= 0 ||
-                updates.getGiaTriGiam().compareTo(new BigDecimal("100")) > 0) {
-                throw new IllegalArgumentException("Giá trị giảm (%) phải từ 1 đến 100");
-            }
-        } else if ("FIXED".equals(updates.getLoaiGiam())) {
-            // For fixed amount: must be greater than 0
-            if (updates.getGiaTriGiam().compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException("Giá trị giảm (đ) phải lớn hơn 0");
-            }
-        }
 
         voucher.setMoTa(updates.getMoTa());
         voucher.setNgayBatDau(updates.getNgayBatDau());
