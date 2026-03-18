@@ -86,6 +86,8 @@ public class DonHangService {
             trangThaiDau = TrangThaiDonHang.CHO_THANH_TOAN;
         } else {
             trangThaiDau = TrangThaiDonHang.CHO_XAC_NHAN;
+
+
         }
 
         // Lấy địa chỉ giao hàng
@@ -137,6 +139,7 @@ public class DonHangService {
 
         donHang = donHangRepository.save(donHang);
 
+
         // Tạo chi tiết đơn hàng
         final DonHang savedDonHang = donHang;
         List<ChiTietDonHang> danhSachChiTiet = new ArrayList<>();
@@ -160,6 +163,13 @@ public class DonHangService {
             danhSachChiTiet.add(chiTiet);
         }
         chiTietDonHangRepository.saveAll(danhSachChiTiet);
+        donHang.setDanhSachChiTiet(danhSachChiTiet);
+
+// trừ kho ngay khi đặt COD
+        if (TrangThaiDonHang.CHO_XAC_NHAN.equals(trangThaiDau)) {
+
+            truKho(donHang);
+        }
 
         // Ghi lịch sử trạng thái
         ghiLichSuTrangThai(donHang, null, trangThaiDau, "Đặt hàng thành công", nguoiDung);
@@ -251,9 +261,9 @@ public class DonHangService {
         // Trừ kho khi chuyển sang DA_XAC_NHAN (for both COD and VNPAY)
         // - COD: admin confirms order → deduct inventory
         // - VNPAY: admin confirms paid order → deduct inventory
-        if (TrangThaiDonHang.DA_XAC_NHAN.equals(trangThaiMoi)) {
-            truKho(donHang);
-        }
+        //if (TrangThaiDonHang.CHO_XAC_NHAN.equals(trangThaiMoi)) {
+        //    truKho(donHang);
+       // }
 
         // Mark COD orders as paid when order is completed (HOAN_TAT)
         // - COD: Payment happens when customer receives order
@@ -349,7 +359,9 @@ public class DonHangService {
             throw new IllegalArgumentException("Không thể hủy đơn ở trạng thái: " + TrangThaiDonHang.layNhan(trangThai));
         }
 
-        if (TrangThaiDonHang.DA_XAC_NHAN.equals(trangThai)
+        if (TrangThaiDonHang.CHO_XAC_NHAN.equals(trangThai)
+                ||
+                TrangThaiDonHang.DA_XAC_NHAN.equals(trangThai)
                 || TrangThaiDonHang.DANG_XU_LY.equals(trangThai)
                 || TrangThaiDonHang.DA_THANH_TOAN.equals(trangThai)
                 || TrangThaiDonHang.DANG_GIAO.equals(trangThai)){
@@ -754,6 +766,10 @@ public class DonHangService {
         }
         donHang.setTrangThaiDonHang(TrangThaiDonHang.DA_THANH_TOAN);
         donHang = donHangRepository.save(donHang);
+
+
+        truKho(donHang);
+
         log.info("[VNPay] Cap nhat thanh toan thanh cong - Trang thai: DA_THANH_TOAN: {}", maDonHang);
         
         // IMPORTANT: Do NOT deduct inventory here!
