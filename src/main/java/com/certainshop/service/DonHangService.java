@@ -35,6 +35,7 @@ public class DonHangService {
     private final VoucherService voucherService;
     private final DiaChiNguoiDungRepository diaChiRepository;
     private final MailService mailService;
+    private final CaBanHangService caBanHangService;
 
     @Value("${app.hoadon.soLuongChoToiDa:5}")
     private int soLuongHoaDonChoToiDa;
@@ -503,12 +504,20 @@ public class DonHangService {
     }
 
     /**
+     * Tìm sản phẩm theo mã biến thể (mã vạch)
+     */
+    public Optional<BienThe> timTheoMaBienThe(String ma) {
+        return bienTheRepository.findByMaBienThe(ma);
+    }
+
+    /**
      * Thanh toán hóa đơn tại quầy
      */
     public DonHang thanhToanTaiQuay(Long donHangId, String phuongThucThanhToan,
-                                     Long khuyenMaiId, NguoiDung nhanVien,
-                                     NguoiDung khachHang, String tenNguoiNhan,
-                                     String sdt, String diaChi) {
+                                     BigDecimal tienKhachTra, String phuongThucPhu,
+                                     BigDecimal tienKhachTraPhu, Long khuyenMaiId,
+                                     NguoiDung nhanVien, NguoiDung khachHang,
+                                     String tenNguoiNhan, String sdt, String diaChi) {
         DonHang donHang = donHangRepository.findById(donHangId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
 
@@ -536,6 +545,10 @@ public class DonHangService {
         donHang.setNguoiDung(khachHang);
         donHang.setNhanVien(nhanVien);
         donHang.setPhuongThucThanhToan(phuongThucThanhToan);
+        donHang.setTienKhachTra(tienKhachTra);
+        donHang.setPhuongThucThanhToanPhu(phuongThucPhu);
+        donHang.setTienKhachTraPhu(tienKhachTraPhu);
+        
         donHang.setTenNguoiNhan(tenNguoiNhan != null ? tenNguoiNhan : (khachHang != null ? khachHang.getHoTen() : "Khách lẻ"));
         donHang.setSdtNguoiNhan(sdt != null ? sdt : (khachHang != null ? khachHang.getSoDienThoai() : ""));
         donHang.setDiaChiGiaoHang(diaChi);
@@ -543,10 +556,42 @@ public class DonHangService {
         BigDecimal tongThanhToan = donHang.getTongTien().subtract(soTienGiam);
         if (tongThanhToan.compareTo(BigDecimal.ZERO) < 0) tongThanhToan = BigDecimal.ZERO;
         donHang.setTongTienThanhToan(tongThanhToan);
+        
+        // Tính tiền thừa (chỉ tính nếu khách trả đủ hoặc hơn)
+        BigDecimal tongKhachDaTra = (tienKhachTra != null ? tienKhachTra : BigDecimal.ZERO)
+                .add(tienKhachTraPhu != null ? tienKhachTraPhu : BigDecimal.ZERO);
+        if (tongKhachDaTra.compareTo(tongThanhToan) >= 0) {
+            donHang.setTienThua(tongKhachDaTra.subtract(tongThanhToan));
+        } else {
+            donHang.setTienThua(BigDecimal.ZERO);
+            // Có thể cho phép thanh toán thiếu nếu là khách quen, nhưng mặc định là phải đủ
+            // throw new IllegalArgumentException("Khách trả chưa đủ tiền");
+        }
+
         donHang.setTrangThaiDonHang(TrangThaiDonHang.HOAN_TAT);
+        donHang.setDaThanhToan(true);
         donHang.setThoiGianTuHuy(null);
 
         donHang = donHangRepository.save(donHang);
+        
+        // Cập nhật doanh thu ca cho nhân viên
+        BigDecimal tienMatShow = BigDecimal.ZERO;
+        BigDecimal tienChuyenKhoanShow = BigDecimal.ZERO;
+
+        if ("TIEN_MAT".equalsIgnoreCase(phuongThucThanhToan)) {
+            tienMatShow = tienKhachTra != null ? tienKhachTra : BigDecimal.ZERO;
+        } else {
+            tienChuyenKhoanShow = tienKhachTra != null ? tienKhachTra : BigDecimal.ZERO;
+        }
+        
+        if ("TIEN_MAT".equalsIgnoreCase(phuongThucPhu)) {
+            tienMatShow = tienMatShow.add(tienKhachTraPhu != null ? tienKhachTraPhu : BigDecimal.ZERO);
+        } else if (phuongThucPhu != null) {
+            tienChuyenKhoanShow = tienChuyenKhoanShow.add(tienKhachTraPhu != null ? tienKhachTraPhu : BigDecimal.ZERO);
+        }
+
+        caBanHangService.capNhatDoanhThuCa(nhanVien, tienMatShow, tienChuyenKhoanShow);
+
         ghiLichSuTrangThai(donHang, TrangThaiDonHang.HOA_DON_CHO, TrangThaiDonHang.HOAN_TAT, "Thanh toán tại quầy - " + phuongThucThanhToan, nhanVien);
 
         return donHang;

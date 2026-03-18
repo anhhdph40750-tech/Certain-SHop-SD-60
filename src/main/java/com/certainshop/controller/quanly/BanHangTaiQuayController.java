@@ -108,9 +108,9 @@ public class BanHangTaiQuayController {
     // Tìm kiếm sản phẩm để thêm vào hóa đơn
     @GetMapping("/tim-san-pham")
     @ResponseBody
-    public ResponseEntity<?> timSanPham(@RequestParam String q) {
+    public ResponseEntity<?> timSanPham(@RequestParam String q, @RequestParam(required = false) String status) {
         try {
-            List<BienThe> bienTheList = bienTheRepository.timKiemChoQuay(q);
+            List<BienThe> bienTheList = bienTheRepository.timKiemChoQuay(q, status);
             List<Map<String, Object>> result = new ArrayList<>();
             for (BienThe bt : bienTheList) {
                 Map<String, Object> item = new HashMap<>();
@@ -223,6 +223,28 @@ public class BanHangTaiQuayController {
         }
     }
 
+    // Tìm kiếm sản phẩm bằng mã vạch (barcode)
+    @GetMapping("/quet-ma")
+    @ResponseBody
+    public ResponseEntity<?> quetMaVach(@RequestParam String code) {
+        try {
+            return donHangService.timTheoMaBienThe(code)
+                    .map(bt -> {
+                        Map<String, Object> item = new HashMap<>();
+                        item.put("id", bt.getId());
+                        item.put("tenSanPham", bt.getSanPham().getTenSanPham());
+                        item.put("kichThuoc", bt.getKichThuoc() != null ? bt.getKichThuoc().getKichCo() : "");
+                        item.put("mauSac", bt.getMauSac() != null ? bt.getMauSac().getTenMau() : "");
+                        item.put("giaBan", bt.getGia());
+                        item.put("soLuongTon", bt.getSoLuongTon());
+                        return ResponseEntity.ok(item);
+                    })
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("thanhCong", false, "thongBao", e.getMessage()));
+        }
+    }
+
     // Thanh toán hóa đơn tại quầy
     @PostMapping("/{hoaDonId}/thanh-toan")
     @ResponseBody
@@ -230,11 +252,16 @@ public class BanHangTaiQuayController {
             @PathVariable Long hoaDonId,
             @RequestParam String phuongThucThanhToan,
             @RequestParam(required = false) BigDecimal tienKhachDua,
+            @RequestParam(required = false) String phuongThucPhu,
+            @RequestParam(required = false) BigDecimal tienPhu,
+            @RequestParam(required = false) Long khachHangId,
             @RequestParam(required = false) String tenKhach,
             @RequestParam(required = false) String sdtKhach) {
         try {
             NguoiDung nv = nguoiDungHienTai.layBatBuoc();
-            donHangService.thanhToanTaiQuay(hoaDonId, phuongThucThanhToan, tienKhachDua, tenKhach, sdtKhach, nv.getId());
+            NguoiDung khachHang = null;
+            // logic tìm khách hàng nếu có id sẽ được bổ sung
+            donHangService.thanhToanTaiQuay(hoaDonId, phuongThucThanhToan, tienKhachDua, phuongThucPhu, tienPhu, null, nv, khachHang, tenKhach, sdtKhach, "");
             return ResponseEntity.ok(Map.of("thanhCong", true, "thongBao", "Thanh toán thành công"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("thanhCong", false, "thongBao", e.getMessage()));

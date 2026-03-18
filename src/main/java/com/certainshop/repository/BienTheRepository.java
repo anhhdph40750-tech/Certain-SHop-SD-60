@@ -45,11 +45,16 @@ public interface BienTheRepository extends JpaRepository<BienThe, Long> {
     @Query("SELECT bt FROM BienThe bt WHERE bt.trangThai = true AND bt.soLuongTon = 0")
     List<BienThe> findBienTheHetHang();
 
-    // Tìm kiếm biến thể cho bán hàng tại quầy
-    @Query("SELECT bt FROM BienThe bt JOIN bt.sanPham sp WHERE bt.trangThai = true AND bt.soLuongTon > 0 " +
+    Optional<BienThe> findByMaBienThe(String maBienThe);
+
+    // Tìm kiếm biến thể cho bán hàng tại quầy (mã, tên, mã sản phẩm, trạng thái)
+    @Query("SELECT bt FROM BienThe bt JOIN bt.sanPham sp WHERE " +
+           "(:trangThai IS NULL OR sp.trangThaiSanPham = :trangThai) " +
            "AND (LOWER(sp.tenSanPham) LIKE LOWER(CONCAT('%', :q, '%')) " +
+           "OR LOWER(sp.maSanPham) LIKE LOWER(CONCAT('%', :q, '%')) " +
+           "OR LOWER(bt.maBienThe) LIKE LOWER(CONCAT('%', :q, '%')) " +
            "OR LOWER(bt.kichThuoc.kichCo) LIKE LOWER(CONCAT('%', :q, '%')) " +
            "OR LOWER(bt.mauSac.tenMau) LIKE LOWER(CONCAT('%', :q, '%'))) " +
            "ORDER BY sp.tenSanPham ASC")
-    List<BienThe> timKiemChoQuay(@Param("q") String q);
+    List<BienThe> timKiemChoQuay(@Param("q") String q, @Param("trangThai") String trangThai);
 }

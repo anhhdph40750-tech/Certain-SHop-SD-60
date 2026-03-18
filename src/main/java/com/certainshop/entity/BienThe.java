@@ -34,6 +34,9 @@ public class BienThe {
     @JoinColumn(name = "ChatLieuId")
     private ChatLieu chatLieu;
 
+    @Column(name = "MaBienThe", length = 50, unique = true)
+    private String maBienThe;
+
     @Column(name = "GiaBan", precision = 18, scale = 2)
     private BigDecimal gia;
 
@@ -58,6 +61,9 @@ public class BienThe {
     @PrePersist
     protected void truocKhiTao() {
         ngayTao = LocalDateTime.now();
+        if (maBienThe == null || maBienThe.isEmpty()) {
+            maBienThe = "BT" + System.currentTimeMillis() + (int)(Math.random() * 1000);
+        }
     }
 
     @PreUpdate

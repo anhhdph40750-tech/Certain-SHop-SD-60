@@ -68,6 +68,19 @@ public class DonHang {
     @Column(name = "DaThanhToan")
     private Boolean daThanhToan = false;
 
+    // Fields cho Bán Tại Quầy
+    @Column(name = "TienKhachTra", precision = 18, scale = 2)
+    private BigDecimal tienKhachTra;
+
+    @Column(name = "TienThua", precision = 18, scale = 2)
+    private BigDecimal tienThua;
+
+    @Column(name = "PhuongThucThanhToanPhu", length = 50)
+    private String phuongThucThanhToanPhu;
+
+    @Column(name = "TienKhachTraPhu", precision = 18, scale = 2)
+    private BigDecimal tienKhachTraPhu;
+
     @Column(name = "MaTinhGHN")
     private Integer maTinhGHN;
 
