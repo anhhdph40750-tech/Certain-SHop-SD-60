@@ -74,15 +74,25 @@ public class DonHangApiController {
     public ResponseEntity<?> donHangCuaToi(
             @RequestParam(defaultValue = "0") int trang,
             @RequestParam(defaultValue = "10") int kichThuocTrang,
+            @RequestParam(defaultValue = "desc") String sortType,
             Authentication auth) {
+
         NguoiDung nd = layNguoiDung(auth);
-        Pageable pageable = PageRequest.of(trang, kichThuocTrang);
-        Page<DonHang> page = donHangRepository.findByNguoiDungIdOrderByThoiGianTaoDesc(nd.getId(), pageable);
+
+        Sort sort = "asc".equalsIgnoreCase(sortType)
+                ? Sort.by("thoiGianTao").ascending()
+                : Sort.by("thoiGianTao").descending();
+
+        Pageable pageable = PageRequest.of(trang, kichThuocTrang, sort);
+
+        Page<DonHang> page = donHangRepository.findByNguoiDungId(nd.getId(), pageable);
+
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("danhSach", page.getContent().stream().map(this::toDonHangSummary).collect(Collectors.toList()));
         result.put("tongSoTrang", page.getTotalPages());
         result.put("tongSoBan", page.getTotalElements());
         result.put("trangHienTai", page.getNumber());
+
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
@@ -145,15 +155,23 @@ public class DonHangApiController {
             @RequestParam(defaultValue = "0") int trang,
             @RequestParam(defaultValue = "15") int kichThuocTrang,
             @RequestParam(required = false) String trangThai,
-            @RequestParam(required = false) String tuKhoa) {
-        Pageable pageable = PageRequest.of(trang, kichThuocTrang, Sort.by("thoiGianTao").descending());
+            @RequestParam(required = false) String tuKhoa,
+            @RequestParam(defaultValue = "desc") String sort) {
+
+        Sort sortObj = "asc".equalsIgnoreCase(sort)
+                ? Sort.by("thoiGianTao").ascending()
+                : Sort.by("thoiGianTao").descending();
+
+        Pageable pageable = PageRequest.of(trang, kichThuocTrang, sortObj);
+
         Page<DonHang> page = donHangRepository.findDonHangAdmin(trangThai, tuKhoa, pageable);
-        // NOTE: Removed ORDER BY from JPQL query to avoid duplication with Pageable sort
+
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("danhSach", page.getContent().stream().map(this::toDonHangSummary).collect(Collectors.toList()));
         result.put("tongSoTrang", page.getTotalPages());
         result.put("tongSoBan", page.getTotalElements());
         result.put("trangHienTai", page.getNumber());
+
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
