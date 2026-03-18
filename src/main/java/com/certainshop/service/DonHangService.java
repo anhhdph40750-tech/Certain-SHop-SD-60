@@ -167,6 +167,7 @@ public class DonHangService {
 
 // trừ kho ngay khi đặt COD
         if (TrangThaiDonHang.CHO_XAC_NHAN.equals(trangThaiDau)) {
+
             truKho(donHang);
         }
 
@@ -765,6 +766,8 @@ public class DonHangService {
         }
         donHang.setTrangThaiDonHang(TrangThaiDonHang.DA_THANH_TOAN);
         donHang = donHangRepository.save(donHang);
+
+
         truKho(donHang);
 
         log.info("[VNPay] Cap nhat thanh toan thanh cong - Trang thai: DA_THANH_TOAN: {}", maDonHang);
