@@ -177,6 +177,22 @@ public class DonHangApiController {
             return ResponseEntity.badRequest().body(ApiResponse.loi(e.getMessage()));
         }
     }
+    @PostMapping("/lay-hang")
+    public ResponseEntity<?> layHang(@RequestParam String maDonHang) {
+
+        DonHang donHang = donHangRepository.findByMaDonHang(maDonHang)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn"));
+
+        if (!donHang.getTrangThaiDonHang().equals("DANG_XU_LY")) {
+            throw new RuntimeException("Đơn chưa sẵn sàng giao");
+        }
+
+        donHang.setTrangThaiDonHang("DANG_GIAO");
+
+        donHangRepository.save(donHang);
+
+        return ResponseEntity.ok("Đã chuyển sang ĐANG_GIAO");
+    }
 
     @PostMapping("/khuyen-mai/kiem-tra")
     public ResponseEntity<?> kiemTraKhuyenMai(

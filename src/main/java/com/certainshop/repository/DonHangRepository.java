@@ -93,4 +93,6 @@ public interface DonHangRepository extends JpaRepository<DonHang, Long> {
     @Query("SELECT dh FROM DonHang dh WHERE dh.trangThaiDonHang = 'CHO_THANH_TOAN' " +
            "AND dh.thoiGianTao <= :thoiGianHetHan")
     List<DonHang> findVNPayHetHan(@Param("thoiGianHetHan") LocalDateTime thoiGianHetHan);
+
+
 }

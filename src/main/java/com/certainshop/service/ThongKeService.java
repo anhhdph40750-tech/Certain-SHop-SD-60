@@ -88,4 +88,5 @@ public class ThongKeService {
     public BigDecimal tinhTongDoanhThu(LocalDateTime tuNgay, LocalDateTime denNgay) {
         return donHangRepository.tinhTongDoanhThu(tuNgay, denNgay);
     }
+
 }
