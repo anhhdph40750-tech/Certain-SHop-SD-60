@@ -35,11 +35,11 @@ public class SanPhamApiController {
 
     @GetMapping("/san-pham")
     public ResponseEntity<?> danhSachSanPham(
-            @RequestParam(required = false) String tuKhoa,
-            @RequestParam(required = false) Long danhMucId,
-            @RequestParam(required = false) Long thuongHieuId,
-            @RequestParam(defaultValue = "0") int trang,
-            @RequestParam(defaultValue = "12") int kichThuocTrang) {
+            @RequestParam(value = "tuKhoa", required = false) String tuKhoa,
+            @RequestParam(value = "danhMucId", required = false) Long danhMucId,
+            @RequestParam(value = "thuongHieuId", required = false) Long thuongHieuId,
+            @RequestParam(value = "trang", defaultValue = "0") int trang,
+            @RequestParam(value = "kichThuocTrang", defaultValue = "12") int kichThuocTrang) {
 
         Pageable pageable = PageRequest.of(trang, kichThuocTrang, Sort.by("thoiGianTao").descending());
         Page<SanPham> page = sanPhamService.timKiemChoKhachHang(tuKhoa, danhMucId, thuongHieuId, pageable);
@@ -55,7 +55,7 @@ public class SanPhamApiController {
     }
 
     @GetMapping("/san-pham/{duongDan}")
-    public ResponseEntity<?> chiTietSanPham(@PathVariable String duongDan) {
+    public ResponseEntity<?> chiTietSanPham(@PathVariable("duongDan") String duongDan) {
         try {
             return sanPhamService.timTheoDuongDan(duongDan)
                     .filter(sp -> sp.isTrangThai())
@@ -72,7 +72,7 @@ public class SanPhamApiController {
     }
 
     @GetMapping("/san-pham/id/{id}")
-    public ResponseEntity<?> chiTietSanPhamById(@PathVariable Long id) {
+    public ResponseEntity<?> chiTietSanPhamById(@PathVariable("id") Long id) {
         return sanPhamService.timTheoId(id)
                 .filter(sp -> sp.isTrangThai())
                 .map(sp -> {
@@ -83,14 +83,14 @@ public class SanPhamApiController {
     }
 
     @GetMapping("/san-pham/ban-chay")
-    public ResponseEntity<?> sanPhamBanChay(@RequestParam(defaultValue = "8") int soLuong) {
+    public ResponseEntity<?> sanPhamBanChay(@RequestParam(value = "soLuong", defaultValue = "8") int soLuong) {
         Pageable pageable = PageRequest.of(0, soLuong);
         List<SanPham> list = sanPhamService.timSanPhamBanChay(pageable);
         return ResponseEntity.ok(ApiResponse.ok(list.stream().map(this::toSanPhamSummary).collect(Collectors.toList())));
     }
 
     @GetMapping("/san-pham/moi")
-    public ResponseEntity<?> sanPhamMoi(@RequestParam(defaultValue = "8") int soLuong) {
+    public ResponseEntity<?> sanPhamMoi(@RequestParam(value = "soLuong", defaultValue = "8") int soLuong) {
         Pageable pageable = PageRequest.of(0, soLuong, Sort.by("thoiGianTao").descending());
         Page<SanPham> page = sanPhamService.timKiemChoKhachHang(null, null, null, pageable);
         return ResponseEntity.ok(ApiResponse.ok(page.getContent().stream().map(this::toSanPhamSummary).collect(Collectors.toList())));
@@ -114,9 +114,9 @@ public class SanPhamApiController {
 
     @GetMapping("/danh-muc/{duongDan}/san-pham")
     public ResponseEntity<?> sanPhamTheoDanhMuc(
-            @PathVariable String duongDan,
-            @RequestParam(defaultValue = "0") int trang,
-            @RequestParam(defaultValue = "12") int kichThuocTrang) {
+            @PathVariable("duongDan") String duongDan,
+            @RequestParam(value = "trang", defaultValue = "0") int trang,
+            @RequestParam(value = "kichThuocTrang", defaultValue = "12") int kichThuocTrang) {
         Pageable pageable = PageRequest.of(trang, kichThuocTrang, Sort.by("thoiGianTao").descending());
         Page<SanPham> page = sanPhamService.timTheoSlugDanhMuc(duongDan, pageable);
         Map<String, Object> result = new LinkedHashMap<>();

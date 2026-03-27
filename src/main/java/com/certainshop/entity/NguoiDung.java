@@ -31,6 +31,12 @@ public class NguoiDung {
     @Column(name = "SoDienThoai", length = 20)
     private String soDienThoai;
 
+    @Column(name = "CCCD", length = 20)
+    private String cccd;
+
+    @Column(name = "MaNguoiDung", length = 20)
+    private String maNguoiDung;
+
     @Column(name = "NgaySinh")
     private LocalDate ngaySinh;
 

@@ -23,9 +23,9 @@ public class GHNApiController {
      */
     @PostMapping("/fee")
     public ResponseEntity<?> tinhPhi(
-            @RequestParam Integer maHuyenNhan,
-            @RequestParam String maXaNhan,
-            @RequestParam(defaultValue = "0") Integer weight) {
+            @RequestParam("maHuyenNhan") Integer maHuyenNhan,
+            @RequestParam("maXaNhan") String maXaNhan,
+            @RequestParam(value = "weight", defaultValue = "0") Integer weight) {
         try {
 
             BigDecimal fee = ghnService.tinhPhiVanChuyen(maHuyenNhan, maXaNhan, weight);

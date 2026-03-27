@@ -2,9 +2,11 @@ package com.certainshop.service;
 
 import com.certainshop.constant.VaiTroConst;
 import com.certainshop.dto.DangKyDto;
+import com.certainshop.entity.DiaChiNguoiDung;
 import com.certainshop.entity.GioHang;
 import com.certainshop.entity.NguoiDung;
 import com.certainshop.entity.VaiTro;
+import com.certainshop.repository.DiaChiNguoiDungRepository;
 import com.certainshop.repository.GioHangRepository;
 import com.certainshop.repository.NguoiDungRepository;
 import com.certainshop.repository.VaiTroRepository;
@@ -27,6 +29,7 @@ public class NguoiDungService {
     private final NguoiDungRepository nguoiDungRepository;
     private final VaiTroRepository vaiTroRepository;
     private final GioHangRepository gioHangRepository;
+    private final DiaChiNguoiDungRepository diaChiNguoiDungRepository;
     private final PasswordEncoder passwordEncoder;
     private final MailService mailService;
 
@@ -159,9 +162,10 @@ public class NguoiDungService {
     }
 
     /**
-     * Tạo tài khoản nhân viên (admin)
+     * Tạo tài khoản nhân viên (admin) — hỗ trợ đầy đủ thông tin + địa chỉ
      */
-    public NguoiDung taoNhanVien(NguoiDung nhanVien, String matKhau, Integer vaiTroId) {
+    public NguoiDung taoNhanVien(NguoiDung nhanVien, String matKhau, Integer vaiTroId,
+                                  DiaChiNguoiDung diaChi) {
         if (nguoiDungRepository.existsByTenDangNhap(nhanVien.getTenDangNhap())) {
             throw new IllegalArgumentException("Tên đăng nhập đã tồn tại");
         }
@@ -177,7 +181,97 @@ public class NguoiDungService {
         nhanVien.setVaiTro(vaiTro);
         nhanVien.setDangHoatDong(true);
 
-        return nguoiDungRepository.save(nhanVien);
+        NguoiDung saved = nguoiDungRepository.save(nhanVien);
+
+        // Sinh mã người dùng dựa theo vai trò và ID
+        String prefix;
+        switch (vaiTro.getTenVaiTro()) {
+            case "NHAN_VIEN" -> prefix = "NV";
+            case "ADMIN"    -> prefix = "AD";
+            default         -> prefix = "KH";
+        }
+        saved.setMaNguoiDung(prefix + String.format("%05d", saved.getId()));
+        saved = nguoiDungRepository.save(saved);
+
+        // Lưu địa chỉ mặc định nếu có
+        if (diaChi != null && diaChi.getTinhThanh() != null
+                && !diaChi.getTinhThanh().isBlank()) {
+            diaChi.setNguoiDung(saved);
+            diaChi.setLaMacDinh(true);
+            diaChiNguoiDungRepository.save(diaChi);
+        }
+
+        return saved;
+    }
+
+    /**
+     * Overload tương thích ngược — không địa chỉ
+     */
+    public NguoiDung taoNhanVien(NguoiDung nhanVien, String matKhau, Integer vaiTroId) {
+        return taoNhanVien(nhanVien, matKhau, vaiTroId, null);
+    }
+
+    /**
+     * Xóa người dùng (chỉ cho phép xóa khi không có đơn hàng, admin gốc không thể xóa)
+     */
+    public void xoaNguoiDung(Long id) {
+        if (id == 1L) {
+            throw new IllegalArgumentException("Không thể xóa tài khoản Admin gốc");
+        }
+        NguoiDung nd = nguoiDungRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+        // Soft-delete: khóa tài khoản thay vì xóa vật lý (giữ toàn vẹn dữ liệu đơn hàng)
+        nd.setDangHoatDong(false);
+        nd.setTrangThai("DA_XOA");
+        nguoiDungRepository.save(nd);
+    }
+
+    /**
+     * Cập nhật thông tin nhân viên (admin)
+     */
+    public NguoiDung capNhatNhanVien(Long id, NguoiDung thongTinMoi, DiaChiNguoiDung diaChi) {
+        NguoiDung nd = nguoiDungRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+        if (id == 1L) {
+            throw new IllegalArgumentException("Không thể chỉnh sửa Admin gốc từ trang này");
+        }
+        if (thongTinMoi.getEmail() != null && !thongTinMoi.getEmail().isBlank()
+                && nguoiDungRepository.existsByEmailAndIdNot(thongTinMoi.getEmail(), id)) {
+            throw new IllegalArgumentException("Email đã được sử dụng bởi tài khoản khác");
+        }
+        nd.setHoTen(thongTinMoi.getHoTen());
+        nd.setSoDienThoai(thongTinMoi.getSoDienThoai());
+        nd.setEmail(thongTinMoi.getEmail());
+        nd.setCccd(thongTinMoi.getCccd());
+        nd.setNgaySinh(thongTinMoi.getNgaySinh());
+        nd.setGioiTinh(thongTinMoi.getGioiTinh());
+        if (thongTinMoi.getAnhDaiDien() != null) {
+            nd.setAnhDaiDien(thongTinMoi.getAnhDaiDien());
+        }
+        NguoiDung saved = nguoiDungRepository.save(nd);
+
+        // Cập nhật địa chỉ mặc định nếu cung cấp
+        if (diaChi != null && diaChi.getTinhThanh() != null
+                && !diaChi.getTinhThanh().isBlank()) {
+            diaChiNguoiDungRepository.findByNguoiDungIdAndLaMacDinhTrue(id).ifPresentOrElse(
+                existing -> {
+                    existing.setDiaChiDong1(diaChi.getDiaChiDong1());
+                    existing.setPhuongXa(diaChi.getPhuongXa());
+                    existing.setQuanHuyen(diaChi.getQuanHuyen());
+                    existing.setTinhThanh(diaChi.getTinhThanh());
+                    existing.setMaTinhGHN(diaChi.getMaTinhGHN());
+                    existing.setMaHuyenGHN(diaChi.getMaHuyenGHN());
+                    existing.setMaXaGHN(diaChi.getMaXaGHN());
+                    diaChiNguoiDungRepository.save(existing);
+                },
+                () -> {
+                    diaChi.setNguoiDung(saved);
+                    diaChi.setLaMacDinh(true);
+                    diaChiNguoiDungRepository.save(diaChi);
+                }
+            );
+        }
+        return saved;
     }
 
     /**

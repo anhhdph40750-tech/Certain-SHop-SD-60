@@ -126,6 +126,9 @@ public class BaoMatConfig {
                     "/api/dia-chi/quan-huyen/**",
                     "/api/dia-chi/phuong-xa/**",
                     "/api/vnpay-return",
+                    "/api/voucher/hoat-dong",
+                    "/api/voucher/tinh-giam",
+                    "/api/voucher/danh-sach-cho-don-hang",
                     // Thymeleaf legacy (giữ lại để không conflict)
                     "/", "/trang-chu", "/san-pham/**", "/danh-muc/**", "/tim-kiem",
                     "/dang-nhap", "/dang-ky", "/css/**", "/js/**", "/img/**",

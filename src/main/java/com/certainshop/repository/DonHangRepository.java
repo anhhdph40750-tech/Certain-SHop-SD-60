@@ -66,17 +66,18 @@ public interface DonHangRepository extends JpaRepository<DonHang, Long> {
             Pageable pageable);
 
     // Thống kê doanh thu theo ngày
-    @Query(value = "SELECT CAST(ThoiGianTao AS DATE) AS ngay, SUM(TongTienThanhToan) AS tong " +
-           "FROM DonHang WHERE TrangThaiDonHang = 'HOAN_TAT' " +
-           "AND ThoiGianTao BETWEEN :tuNgay AND :denNgay " +
-           "GROUP BY CAST(ThoiGianTao AS DATE) " +
-           "ORDER BY CAST(ThoiGianTao AS DATE) ASC", nativeQuery = true)
+    // Thống kê doanh thu theo ngày
+    @Query(value = "SELECT CAST(ThoiGianTao AS DATE) AS ngay, SUM(TongTienHang) AS tong " +
+            "FROM DonHang WHERE TrangThaiDonHang = 'HOAN_TAT' " +
+            "AND ThoiGianTao BETWEEN :tuNgay AND :denNgay " +
+            "GROUP BY CAST(ThoiGianTao AS DATE) " +
+            "ORDER BY CAST(ThoiGianTao AS DATE) ASC", nativeQuery = true)
     List<Object[]> thongKeDoanhThuTheoNgay(
             @Param("tuNgay") LocalDateTime tuNgay,
             @Param("denNgay") LocalDateTime denNgay);
 
     // Tổng doanh thu
-    @Query("SELECT COALESCE(SUM(dh.tongTienThanhToan), 0) FROM DonHang dh " +
+    @Query("SELECT COALESCE(SUM(dh.tongTien), 0) FROM DonHang dh " +
            "WHERE dh.trangThaiDonHang = 'HOAN_TAT' AND dh.thoiGianTao BETWEEN :tuNgay AND :denNgay")
     BigDecimal tinhTongDoanhThu(
             @Param("tuNgay") LocalDateTime tuNgay,

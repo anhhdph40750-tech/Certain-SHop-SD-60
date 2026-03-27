@@ -37,6 +37,9 @@ public class DatHangDto {
 
     private Long khuyenMaiId;
 
+    // Mã voucher (hệ thống Voucher mới hoặc KhuyenMai cũ) gửi từ FE
+    private String maVoucher;
+
     private String ghiChu;
 
     private Boolean luuDiaChi = false;

@@ -24,9 +24,9 @@ public interface SanPhamRepository extends JpaRepository<SanPham, Long> {
             @Param("thuongHieuId") Long thuongHieuId,
             Pageable pageable);
 
-    // Tất cả (bao gồm đã ẩn) - cho admin, lọc những sản phẩm chưa bị xóa (trangThai = true)
-    @Query("SELECT sp FROM SanPham sp WHERE sp.trangThai = true " +
-           "AND (:tuKhoa IS NULL OR LOWER(sp.tenSanPham) LIKE LOWER(CONCAT('%', :tuKhoa, '%'))) " +
+    // Tất cả (bao gồm ngừng bán) - cho admin
+    @Query("SELECT sp FROM SanPham sp WHERE " +
+           "(:tuKhoa IS NULL OR LOWER(sp.tenSanPham) LIKE LOWER(CONCAT('%', :tuKhoa, '%'))) " +
            "AND (:danhMucId IS NULL OR sp.danhMuc.id = :danhMucId) " +
            "AND (:thuongHieuId IS NULL OR sp.thuongHieu.id = :thuongHieuId) " +
            "AND (:trangThai IS NULL OR sp.trangThaiSanPham = :trangThai)")

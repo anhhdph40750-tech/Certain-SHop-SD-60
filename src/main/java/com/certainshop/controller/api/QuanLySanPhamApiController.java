@@ -19,6 +19,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import com.certainshop.util.ExcelHelper;
 
 @RestController
 @RequestMapping("/api/quan-ly/san-pham")
@@ -33,12 +38,12 @@ public class QuanLySanPhamApiController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<Map<String, Object>>> danhSach(
-            @RequestParam(defaultValue = "") String tuKhoa,
-            @RequestParam(required = false) Long danhMucId,
-            @RequestParam(required = false) Long thuongHieuId,
-            @RequestParam(required = false) Boolean trangThai,
-            @RequestParam(defaultValue = "0") int trang,
-            @RequestParam(defaultValue = "20") int kichThuocTrang) {
+            @RequestParam(value = "tuKhoa", defaultValue = "") String tuKhoa,
+            @RequestParam(value = "danhMucId", required = false) Long danhMucId,
+            @RequestParam(value = "thuongHieuId", required = false) Long thuongHieuId,
+            @RequestParam(value = "trangThai", required = false) Boolean trangThai,
+            @RequestParam(value = "trang", defaultValue = "0") int trang,
+            @RequestParam(value = "kichThuocTrang", defaultValue = "20") int kichThuocTrang) {
         Pageable pageable = PageRequest.of(trang, kichThuocTrang, Sort.by("thoiGianTao").descending());
         Page<SanPham> page = sanPhamService.timKiemAdmin(
                 tuKhoa.isEmpty() ? null : tuKhoa, danhMucId, thuongHieuId, trangThai, pageable);
@@ -52,7 +57,7 @@ public class QuanLySanPhamApiController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> chiTiet(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> chiTiet(@PathVariable("id") Long id) {
         return sanPhamService.timTheoId(id)
                 .map(sp -> {
                     List<BienThe> bienThe = sanPhamService.danhSachBienTheCuaSanPham(id);
@@ -74,7 +79,7 @@ public class QuanLySanPhamApiController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<SanPham>> capNhat(
-            @PathVariable Long id, @RequestBody SanPhamDto dto) {
+            @PathVariable("id") Long id, @RequestBody SanPhamDto dto) {
         try {
             SanPham sp = sanPhamService.capNhatSanPham(id, dto);
             return ResponseEntity.ok(ApiResponse.ok("Cập nhật thành công", sp));
@@ -84,10 +89,21 @@ public class QuanLySanPhamApiController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> xoa(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> xoa(@PathVariable("id") Long id) {
         try {
             sanPhamService.xoaSanPham(id);
-            return ResponseEntity.ok(ApiResponse.ok("Xóa sản phẩm thành công", null));
+            return ResponseEntity.ok(ApiResponse.ok("Đã chuyển sản phẩm sang ngừng bán", null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.loi(e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{id}/trang-thai")
+    public ResponseEntity<ApiResponse<String>> toggleTrangThai(@PathVariable("id") Long id) {
+        try {
+            String trangThaiMoi = sanPhamService.toggleTrangThai(id);
+            String msg = "DANG_BAN".equals(trangThaiMoi) ? "Đã mở bán sản phẩm" : "Đã ngừng bán sản phẩm";
+            return ResponseEntity.ok(ApiResponse.ok(msg, trangThaiMoi));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.loi(e.getMessage()));
         }
@@ -97,7 +113,7 @@ public class QuanLySanPhamApiController {
 
     @PostMapping("/{sanPhamId}/bien-the")
     public ResponseEntity<ApiResponse<BienThe>> taoBienThe(
-            @PathVariable Long sanPhamId, @RequestBody BienTheDto dto) {
+            @PathVariable("sanPhamId") Long sanPhamId, @RequestBody BienTheDto dto) {
         try {
             BienThe bt = sanPhamService.taoBienThe(sanPhamId, dto);
             return ResponseEntity.ok(ApiResponse.ok("Tạo biến thể thành công", bt));
@@ -108,7 +124,7 @@ public class QuanLySanPhamApiController {
 
     @PostMapping("/{sanPhamId}/bien-the/bulk")
     public ResponseEntity<ApiResponse<List<BienThe>>> taoBulkBienThe(
-            @PathVariable Long sanPhamId, @RequestBody List<BienTheDto> danhSachBienThe) {
+            @PathVariable("sanPhamId") Long sanPhamId, @RequestBody List<BienTheDto> danhSachBienThe) {
         try {
             if (danhSachBienThe == null || danhSachBienThe.isEmpty()) {
                 return ResponseEntity.badRequest().body(ApiResponse.loi("Danh sách biến thể không được trống"));
@@ -123,7 +139,7 @@ public class QuanLySanPhamApiController {
 
     @PutMapping("/bien-the/{bienTheId}")
     public ResponseEntity<ApiResponse<BienThe>> capNhatBienThe(
-            @PathVariable Long bienTheId, @RequestBody BienTheDto dto) {
+            @PathVariable("bienTheId") Long bienTheId, @RequestBody BienTheDto dto) {
         try {
             BienThe bt = sanPhamService.capNhatBienThe(bienTheId, dto);
             return ResponseEntity.ok(ApiResponse.ok("Cập nhật biến thể thành công", bt));
@@ -133,7 +149,7 @@ public class QuanLySanPhamApiController {
     }
 
     @DeleteMapping("/bien-the/{bienTheId}")
-    public ResponseEntity<ApiResponse<Void>> xoaBienThe(@PathVariable Long bienTheId) {
+    public ResponseEntity<ApiResponse<Void>> xoaBienThe(@PathVariable("bienTheId") Long bienTheId) {
         try {
             sanPhamService.xoaBienThe(bienTheId);
             return ResponseEntity.ok(ApiResponse.ok("Xóa biến thể thành công", null));
@@ -146,9 +162,9 @@ public class QuanLySanPhamApiController {
 
     @PostMapping("/bien-the/{bienTheId}/upload-anh")
     public ResponseEntity<?> uploadAnh(
-            @PathVariable Long bienTheId,
+            @PathVariable("bienTheId") Long bienTheId,
             @RequestParam("file") MultipartFile file,
-            @RequestParam(defaultValue = "false") boolean laAnhChinh) {
+            @RequestParam(value = "laAnhChinh", defaultValue = "false") boolean laAnhChinh) {
         try {
             var hinhAnh = sanPhamService.uploadAnhBienThe(bienTheId, file, laAnhChinh, uploadDir);
             return ResponseEntity.ok(ApiResponse.ok("Upload ảnh thành công",
@@ -159,12 +175,37 @@ public class QuanLySanPhamApiController {
     }
 
     @DeleteMapping("/anh/{anhId}")
-    public ResponseEntity<ApiResponse<Void>> xoaAnh(@PathVariable Long anhId) {
+    public ResponseEntity<ApiResponse<Void>> xoaAnh(@PathVariable("anhId") Long anhId) {
         try {
             sanPhamService.xoaAnh(anhId);
             return ResponseEntity.ok(ApiResponse.ok("Xóa ảnh thành công", null));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.loi(e.getMessage()));
         }
+    }
+
+    // ======================== EXCEL ========================
+    @GetMapping("/xuat-excel")
+    public ResponseEntity<Resource> xuatExcel() {
+        String filename = "SanPhams_" + System.currentTimeMillis() + ".xlsx";
+        InputStreamResource file = new InputStreamResource(sanPhamService.xuatExcel());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType(ExcelHelper.TYPE))
+                .body(file);
+    }
+
+    @PostMapping("/nhap-excel")
+    public ResponseEntity<?> nhapExcel(@RequestParam("file") MultipartFile file) {
+        if (ExcelHelper.hasExcelFormat(file)) {
+            try {
+                sanPhamService.nhapExcel(file);
+                return ResponseEntity.ok(ApiResponse.ok("Import dữ liệu thành công!", null));
+            } catch (Exception e) {
+                return ResponseEntity.badRequest().body(ApiResponse.loi("Lỗi import: " + e.getMessage()));
+            }
+        }
+        return ResponseEntity.badRequest().body(ApiResponse.loi("Vui lòng tải lên file Excel hợp lệ (xlsx)."));
     }
 }

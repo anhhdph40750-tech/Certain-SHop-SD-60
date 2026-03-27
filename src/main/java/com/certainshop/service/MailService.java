@@ -253,22 +253,66 @@ public class MailService {
     @Async
     public void guiMailHuyDon(String toEmail, String hoTen, String maDonHang,
                                String lyDo, boolean doKhachHuy) {
-        if (!hopLe(toEmail)) return;
+        if (!hopLe(toEmail)) {
+            log.warn("[Mail] Bo qua huy don {} - email khong hop le", maDonHang);
+            return;
+        }
         String ten = (hoTen != null && !hoTen.isBlank()) ? hoTen : "Quý khách";
-        String nguoiHuy = doKhachHuy ? "theo yêu cầu của bạn" : "bởi cửa hàng";
-        String lyDoHienThi = (lyDo != null && !lyDo.isBlank()) ? lyDo : "Không có ghi chú";
+        String nguoiHuy = doKhachHuy ? "Quý khách đã yêu cầu hủy đơn hàng."
+                                     : "Cửa hàng đã hủy đơn hàng của bạn.";
+        String lyDoHtml = (lyDo != null && !lyDo.isBlank())
+                ? "<p style=\"color:#6b7280;font-size:14px;\">Lý do: <em>" + lyDo + "</em></p>"
+                : "";
         String noiDung = "<p style=\"font-size:15px;\">Xin chào <strong>" + ten + "</strong>,</p>"
-            + "<p>Đơn hàng <strong>#" + maDonHang + "</strong> đã bị hủy " + nguoiHuy + ".</p>"
-            + "<div style=\"background:#fff7ed;border-left:4px solid #fb923c;"
-            + "padding:16px 20px;border-radius:0 6px 6px 0;margin:24px 0;\">"
-            + "<p style=\"margin:0;\"><strong>Lý do:</strong> " + lyDoHienThi + "</p>"
-            + "</div>"
-            + "<p>Nếu đây không phải yêu cầu của bạn hoặc bạn cần hỗ trợ, "
-            + "vui lòng liên hệ ngay với chúng tôi.</p>"
-            + "<p style=\"color:#9ca3af;font-size:13px;\">Chúng tôi rất tiếc vì sự bất tiện này. "
-            + "Hy vọng gặp lại bạn trong những lần mua sắm tiếp theo!</p>";
+            + "<p>" + nguoiHuy + "</p>"
+            + "<div style=\"background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;"
+            + "padding:20px;margin:24px 0;\">"
+            + "<table style=\"width:100%;border-collapse:collapse;\">"
+            + dongBang("Mã đơn hàng",
+                "<span style=\"font-weight:700;color:#4f46e5;\">#" + maDonHang + "</span>", false)
+            + dongBang("Trạng thái",
+                "<span style=\"color:#dc2626;font-weight:600;\">❌ Đã hủy</span>", true)
+            + "</table></div>"
+            + lyDoHtml
+            + "<p style=\"color:#6b7280;font-size:14px;\">Nếu có thắc mắc hoặc cần hỗ trợ, "
+            + "vui lòng liên hệ với chúng tôi. Chúng tôi rất tiếc vì sự bất tiện này.</p>";
         send(toEmail,
              "[" + shopName + "] Đơn hàng #" + maDonHang + " đã bị hủy",
              khuonHtml("Thông báo hủy đơn hàng", noiDung));
+    }
+
+    // ================================================================
+    //  6. BIÊN LAI BÁN HÀNG TẠI QUẦY
+    // ================================================================
+
+    @Async
+    public void guiMailBienlaiTaiQuay(String toEmail, String hoTen, String maDonHang,
+                                       BigDecimal tongTienThanhToan, BigDecimal giamGia,
+                                       String phuongThuc) {
+        if (!hopLe(toEmail)) return;
+        String ten = (hoTen != null && !hoTen.isBlank()) ? hoTen : "Quý khách";
+        String pt = "CHUYEN_KHOAN".equalsIgnoreCase(phuongThuc) ? "Chuyển khoản" : "Tiền mặt";
+        String noiDung = "<p style=\"font-size:15px;\">Xin chào <strong>" + ten + "</strong>,</p>"
+            + "<p>Cảm ơn bạn đã mua hàng tại <strong>" + shopName + "</strong>. "
+            + "Dưới đây là biên lai thanh toán của bạn.</p>"
+            + "<div style=\"background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:24px;margin:24px 0;\">" 
+            + "<table style=\"width:100%;border-collapse:collapse;\">"
+            + dongBang("Mã hóa đơn",
+                "<span style=\"font-weight:700;color:#4f46e5;\">#" + maDonHang + "</span>", false)
+            + (giamGia != null && giamGia.compareTo(BigDecimal.ZERO) > 0
+                ? dongBang("Giảm giá",
+                    "<span style=\"color:#16a34a;\">-" + formatTien(giamGia) + "</span>", true)
+                : "")
+            + dongBang("Thành tiền",
+                "<span style=\"font-weight:700;font-size:16px;color:#16a34a;\">" + formatTien(tongTienThanhToan) + "</span>", true)
+            + dongBang("Hình thức", pt, true)
+            + dongBang("Trạng thái",
+                "<span style=\"color:#16a34a;font-weight:600;\">\u2705 Đã thanh toán</span>", true)
+            + "</table></div>"
+            + "<p style=\"color:#6b7280;font-size:14px;\">Nếu có thắc mắc, vui lòng liên hệ với chúng tôi. "
+            + "Chúng tôi luôn sẵn sàng hỗ trợ bạn!</p>";
+        send(toEmail,
+             "[" + shopName + "] Biên lai thanh toán #" + maDonHang,
+             khuonHtml("Thanh toán thành công!", noiDung));
     }
 }

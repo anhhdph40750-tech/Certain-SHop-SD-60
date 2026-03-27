@@ -72,9 +72,9 @@ public class DonHangApiController {
 
     @GetMapping("/don-hang/cua-toi")
     public ResponseEntity<?> donHangCuaToi(
-            @RequestParam(defaultValue = "0") int trang,
-            @RequestParam(defaultValue = "10") int kichThuocTrang,
-            @RequestParam(defaultValue = "desc") String sortType,
+            @RequestParam(value = "trang", defaultValue = "0") int trang,
+            @RequestParam(value = "kichThuocTrang", defaultValue = "10") int kichThuocTrang,
+            @RequestParam(value = "sortType", defaultValue = "desc") String sortType,
             Authentication auth) {
 
         NguoiDung nd = layNguoiDung(auth);
@@ -97,7 +97,7 @@ public class DonHangApiController {
     }
 
     @GetMapping("/don-hang/cua-toi/{maDonHang}")
-    public ResponseEntity<?> chiTietDonHangCuaToi(@PathVariable String maDonHang, Authentication auth) {
+    public ResponseEntity<?> chiTietDonHangCuaToi(@PathVariable("maDonHang") String maDonHang, Authentication auth) {
         NguoiDung nd = layNguoiDung(auth);
         return donHangRepository.findByMaDonHang(maDonHang)
                 .filter(dh -> dh.getNguoiDung() != null && dh.getNguoiDung().getId().equals(nd.getId()))
@@ -106,7 +106,7 @@ public class DonHangApiController {
     }
 
     @PostMapping("/don-hang/huy/{maDonHang}")
-    public ResponseEntity<?> huyDonHang(@PathVariable String maDonHang, Authentication auth) {
+    public ResponseEntity<?> huyDonHang(@PathVariable("maDonHang") String maDonHang, Authentication auth) {
         try {
             NguoiDung nd = layNguoiDung(auth);
             DonHang donHang = donHangRepository.findByMaDonHang(maDonHang)
@@ -115,6 +115,7 @@ public class DonHangApiController {
                 return ResponseEntity.status(403).body(ApiResponse.loi("Không có quyền hủy đơn hàng này"));
             }
             if (!(TrangThaiDonHang.CHO_XAC_NHAN.equals(donHang.getTrangThaiDonHang())
+                    || TrangThaiDonHang.DA_THANH_TOAN.equals(donHang.getTrangThaiDonHang())
                     || TrangThaiDonHang.DA_XAC_NHAN.equals(donHang.getTrangThaiDonHang())
                     || TrangThaiDonHang.DANG_XU_LY.equals(donHang.getTrangThaiDonHang()))) {
 
@@ -129,7 +130,7 @@ public class DonHangApiController {
     }
 
     @PostMapping("/don-hang/xac-nhan-nhan-hang/{maDonHang}")
-    public ResponseEntity<?> xacNhanNhanHang(@PathVariable String maDonHang, Authentication auth) {
+    public ResponseEntity<?> xacNhanNhanHang(@PathVariable("maDonHang") String maDonHang, Authentication auth) {
         try {
             NguoiDung nd = layNguoiDung(auth);
             DonHang donHang = donHangRepository.findByMaDonHang(maDonHang)
@@ -207,6 +208,22 @@ public class DonHangApiController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.loi(e.getMessage()));
         }
+    }
+    @PostMapping("/lay-hang")
+    public ResponseEntity<?> layHang(@RequestParam String maDonHang) {
+
+        DonHang donHang = donHangRepository.findByMaDonHang(maDonHang)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn"));
+
+        if (!donHang.getTrangThaiDonHang().equals("DANG_XU_LY")) {
+            throw new RuntimeException("Đơn chưa sẵn sàng giao");
+        }
+
+        donHang.setTrangThaiDonHang("DANG_GIAO");
+
+        donHangRepository.save(donHang);
+
+        return ResponseEntity.ok("Đã chuyển sang ĐANG_GIAO");
     }
 
     @PostMapping("/khuyen-mai/kiem-tra")
@@ -318,7 +335,7 @@ public class DonHangApiController {
      * Frontend có thể gọi để verify thanh toán
      */
     @GetMapping("/payment-status/{maDonHang}")
-    public ResponseEntity<?> kiemTraTrangThaiThanhToan(@PathVariable String maDonHang) {
+    public ResponseEntity<?> kiemTraTrangThaiThanhToan(@PathVariable("maDonHang") String maDonHang) {
         try {
             Map<String, Object> trangThai = donHangService.layTrangThaiThanhToan(maDonHang);
             return ResponseEntity.ok(ApiResponse.ok("Trạng thái thanh toán", trangThai));

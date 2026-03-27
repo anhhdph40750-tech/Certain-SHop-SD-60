@@ -34,8 +34,7 @@ public class DonHangKhachController {
     @GetMapping("/don-hang/cua-toi")
     public String danhSachDonHang(
             @RequestParam(defaultValue = "desc") String sort,
-            Model model
-    ) {
+            Model model) {
         NguoiDung nguoiDung = nguoiDungHienTai.layBatBuoc();
 
         List<DonHang> danhSach = donHangService
@@ -91,7 +90,8 @@ public class DonHangKhachController {
         // Thu thập tất cả tham số từ VNPay
         Map<String, String> params = new HashMap<>();
         request.getParameterMap().forEach((key, values) -> {
-            if (values.length > 0) params.put(key, values[0]);
+            if (values.length > 0)
+                params.put(key, values[0]);
         });
 
         String responseCode = params.get("vnp_ResponseCode");

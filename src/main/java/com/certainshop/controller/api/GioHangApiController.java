@@ -57,7 +57,7 @@ public class GioHangApiController {
 
     @PutMapping("/cap-nhat/{chiTietId}")
     public ResponseEntity<?> capNhatSoLuong(
-            @PathVariable Long chiTietId,
+            @PathVariable("chiTietId") Long chiTietId,
             @RequestBody Map<String, Object> body,
             Authentication auth) {
         try {
@@ -72,7 +72,7 @@ public class GioHangApiController {
     }
 
     @DeleteMapping("/xoa/{chiTietId}")
-    public ResponseEntity<?> xoaKhoiGioHang(@PathVariable Long chiTietId, Authentication auth) {
+    public ResponseEntity<?> xoaKhoiGioHang(@PathVariable("chiTietId") Long chiTietId, Authentication auth) {
         try {
             gioHangService.xoaKhoiGioHang(chiTietId);
             NguoiDung nd = layNguoiDung(auth);
