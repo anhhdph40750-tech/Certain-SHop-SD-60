@@ -36,7 +36,7 @@ public class VoucherApiController {
     @GetMapping("/all")
     @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN')")
     public ResponseEntity<ApiResponse<List<Voucher>>> danhSachTatCa() {
-        List<Voucher> vouchers = voucherService.danhSachTatCaVoucher();
+        List<Voucher> vouchers = voucherService.danhSachChoAdmin();
         return ResponseEntity.ok(ApiResponse.ok("Danh sách tất cả vouchers", vouchers));
     }
 

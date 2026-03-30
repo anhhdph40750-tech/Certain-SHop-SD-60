@@ -75,6 +75,7 @@ public class DonHangApiController {
             @RequestParam(value = "trang", defaultValue = "0") int trang,
             @RequestParam(value = "kichThuocTrang", defaultValue = "10") int kichThuocTrang,
             @RequestParam(value = "sortType", defaultValue = "desc") String sortType,
+            @RequestParam(value = "trangThai", required = false) String trangThai,
             Authentication auth) {
 
         NguoiDung nd = layNguoiDung(auth);
@@ -85,7 +86,12 @@ public class DonHangApiController {
 
         Pageable pageable = PageRequest.of(trang, kichThuocTrang, sort);
 
-        Page<DonHang> page = donHangRepository.findByNguoiDungId(nd.getId(), pageable);
+        Page<DonHang> page;
+        if (trangThai == null || trangThai.trim().isEmpty()) {
+            page = donHangRepository.findByNguoiDungId(nd.getId(), pageable);
+        } else {
+            page = donHangRepository.findByNguoiDungIdAndTrangThaiDonHang(nd.getId(), trangThai, pageable);
+        }
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("danhSach", page.getContent().stream().map(this::toDonHangSummary).collect(Collectors.toList()));
@@ -368,6 +374,29 @@ public class DonHangApiController {
         m.put("soMatHang", dh.getDanhSachChiTiet() != null ? dh.getDanhSachChiTiet().size() : 0);
         if (dh.getNguoiDung() != null) {
             m.put("nguoiDung", Map.of("id", dh.getNguoiDung().getId(), "tenDangNhap", dh.getNguoiDung().getTenDangNhap(), "hoTen", dh.getNguoiDung().getHoTen() != null ? dh.getNguoiDung().getHoTen() : ""));
+        }
+        if (dh.getDanhSachChiTiet() != null && !dh.getDanhSachChiTiet().isEmpty()) {
+            m.put("danhSachChiTiet", dh.getDanhSachChiTiet().stream().map(ct -> {
+                Map<String, Object> ctMap = new LinkedHashMap<>();
+                ctMap.put("id", ct.getId());
+                ctMap.put("soLuong", ct.getSoLuong());
+                ctMap.put("giaTaiThoiDiemMua", ct.getGiaTaiThoiDiemMua());
+                ctMap.put("thanhTien", ct.getThanhTien());
+                if (ct.getBienThe() != null) {
+                    var bt = ct.getBienThe();
+                    Map<String, Object> btMap = new LinkedHashMap<>();
+                    btMap.put("id", bt.getId());
+                    btMap.put("anhChinh", bt.getAnhChinh());
+                    if (bt.getSanPham() != null) {
+                        btMap.put("tenSanPham", bt.getSanPham().getTenSanPham());
+                        btMap.put("duongDanSanPham", bt.getSanPham().getDuongDan());
+                    }
+                    if (bt.getKichThuoc() != null) btMap.put("kichThuoc", bt.getKichThuoc().getKichCo());
+                    if (bt.getMauSac() != null) btMap.put("tenMauSac", bt.getMauSac().getTenMau());
+                    ctMap.put("bienThe", btMap);
+                }
+                return ctMap;
+            }).collect(Collectors.toList()));
         }
         return m;
     }

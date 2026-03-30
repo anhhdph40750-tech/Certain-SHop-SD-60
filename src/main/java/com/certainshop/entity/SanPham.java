@@ -8,7 +8,11 @@ import java.util.List;
 
 @Entity
 @Table(name = "SanPham")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class SanPham {
 
     @Id
@@ -67,17 +71,19 @@ public class SanPham {
 
     public void setTrangThai(boolean active) {
         // Update BOTH the Boolean flag AND the status string
-        this.trangThai = active;  //  Set soft-delete flag
-        this.trangThaiSanPham = active ? "DANG_BAN" : "NGUNG_BAN";  //  Set status
+        this.trangThai = active; // Set soft-delete flag
+        this.trangThaiSanPham = active ? "DANG_BAN" : "NGUNG_BAN"; // Set status
     }
 
     @PrePersist
     protected void truocKhiTao() {
         LocalDateTime now = LocalDateTime.now();
         thoiGianTao = now;
-        thoiGianCapNhat = now;  // Set on creation too
-        if (trangThaiSanPham == null) trangThaiSanPham = "DANG_BAN";
-        if (trangThai == null) trangThai = true;
+        thoiGianCapNhat = now; // Set on creation too
+        if (trangThaiSanPham == null)
+            trangThaiSanPham = "DANG_BAN";
+        if (trangThai == null)
+            trangThai = true;
     }
 
     @PreUpdate

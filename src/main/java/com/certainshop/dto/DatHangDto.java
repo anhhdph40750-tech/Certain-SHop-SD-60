@@ -6,7 +6,11 @@ import lombok.*;
 /**
  * DTO đặt hàng online
  */
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class DatHangDto {
 
     // ID địa chỉ đã lưu (nếu chọn từ danh sách)

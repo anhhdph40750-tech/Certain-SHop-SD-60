@@ -68,7 +68,30 @@ public class VoucherService {
     }
 
     /**
-     * Danh sách TẤT CẢ vouchers hoạt động (không bị xóa) cho admin
+     * Danh sách TẤT CẢ vouchers cho admin (Bao gồm ngừng hoạt động)
+     */
+    @Transactional(readOnly = false)
+    public List<Voucher> danhSachChoAdmin() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Voucher> vouchers = voucherRepository.findAllVouchers();
+
+        for (Voucher v : vouchers) {
+            boolean expired = v.getNgayKetThuc() != null && now.isAfter(v.getNgayKetThuc());
+            boolean exhausted = v.getSoLuongToiDa() != null
+                    && v.getSoLuongSuDung() != null
+                    && v.getSoLuongSuDung() >= v.getSoLuongToiDa();
+
+            if ((expired || exhausted) && Boolean.TRUE.equals(v.getTrangThai())) {
+                v.setTrangThai(false);
+                voucherRepository.save(v);
+            }
+        }
+
+        return vouchers;
+    }
+
+    /**
+     * Danh sách TẤT CẢ vouchers hoạt động (không bị xóa) cho checkout
      */
     @Transactional(readOnly = false)
     public List<Voucher> danhSachTatCaVoucher() {
