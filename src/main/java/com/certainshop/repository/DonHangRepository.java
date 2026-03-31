@@ -70,18 +70,46 @@ public interface DonHangRepository extends JpaRepository<DonHang, Long> {
 
     // Thống kê doanh thu theo ngày
     // Thống kê doanh thu theo ngày
-    @Query(value = "SELECT CAST(ThoiGianTao AS DATE) AS ngay, SUM(TongTienHang) AS tong " +
-            "FROM DonHang WHERE TrangThaiDonHang = 'HOAN_TAT' " +
+//    @Query(value = "SELECT CAST(ThoiGianTao AS DATE) AS ngay, " +
+//            "SUM(TongTienHang - ISNULL(SoTienGiamGia,0)) AS tong " +
+//            "FROM DonHang " +
+//            "WHERE TrangThaiDonHang = 'HOAN_TAT' " +
+//            "AND ThoiGianTao BETWEEN :tuNgay AND :denNgay " +
+//            "GROUP BY CAST(ThoiGianTao AS DATE) " +
+//            "ORDER BY CAST(ThoiGianTao AS DATE) ASC",
+//            nativeQuery = true)
+//    List<Object[]> thongKeDoanhThuTheoNgay(
+//            @Param("tuNgay") LocalDateTime tuNgay,
+//            @Param("denNgay") LocalDateTime denNgay);
+
+    @Query(value = "SELECT CAST(ThoiGianTao AS DATE) AS ngay, " +
+            "SUM(CASE " +
+            "       WHEN (TongTienHang - ISNULL(SoTienGiamGia,0)) < 0 THEN 0 " +
+            "       ELSE (TongTienHang - ISNULL(SoTienGiamGia,0)) " +
+            "    END) AS tong " +
+            "FROM DonHang " +
+            "WHERE TrangThaiDonHang = 'HOAN_TAT' " +
             "AND ThoiGianTao BETWEEN :tuNgay AND :denNgay " +
             "GROUP BY CAST(ThoiGianTao AS DATE) " +
-            "ORDER BY CAST(ThoiGianTao AS DATE) ASC", nativeQuery = true)
+            "ORDER BY CAST(ThoiGianTao AS DATE) ASC",
+            nativeQuery = true)
     List<Object[]> thongKeDoanhThuTheoNgay(
             @Param("tuNgay") LocalDateTime tuNgay,
             @Param("denNgay") LocalDateTime denNgay);
 
     // Tổng doanh thu
-    @Query("SELECT COALESCE(SUM(dh.tongTien), 0) FROM DonHang dh " +
-           "WHERE dh.trangThaiDonHang = 'HOAN_TAT' AND dh.thoiGianTao BETWEEN :tuNgay AND :denNgay")
+//    @Query("SELECT COALESCE(SUM(dh.tongTien - dh.soTienGiamGia), 0) FROM DonHang dh " +
+//           "WHERE dh.trangThaiDonHang = 'HOAN_TAT' AND dh.thoiGianTao BETWEEN :tuNgay AND :denNgay")
+//    BigDecimal tinhTongDoanhThu(
+//            @Param("tuNgay") LocalDateTime tuNgay,
+//            @Param("denNgay") LocalDateTime denNgay);
+
+    @Query("SELECT COALESCE(SUM(CASE " +
+            "WHEN (dh.tongTien - dh.soTienGiamGia) < 0 THEN 0 " +
+            "ELSE (dh.tongTien - dh.soTienGiamGia) END), 0) " +
+            "FROM DonHang dh " +
+            "WHERE dh.trangThaiDonHang = 'HOAN_TAT' " +
+            "AND dh.thoiGianTao BETWEEN :tuNgay AND :denNgay")
     BigDecimal tinhTongDoanhThu(
             @Param("tuNgay") LocalDateTime tuNgay,
             @Param("denNgay") LocalDateTime denNgay);
