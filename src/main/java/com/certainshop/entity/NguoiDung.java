@@ -8,7 +8,11 @@ import java.util.List;
 
 @Entity
 @Table(name = "NguoiDung")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class NguoiDung {
 
     @Id
@@ -78,7 +82,8 @@ public class NguoiDung {
     protected void truocKhiTao() {
         thoiGianTao = LocalDateTime.now();
         dangHoatDong = true;
-        if (trangThai == null) trangThai = "HOAT_DONG";
+        if (trangThai == null)
+            trangThai = "HOAT_DONG";
     }
 
     @PreUpdate

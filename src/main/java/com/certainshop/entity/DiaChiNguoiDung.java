@@ -7,7 +7,11 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "DiaChiNguoiDung")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class DiaChiNguoiDung {
 
     @Id
@@ -73,10 +77,14 @@ public class DiaChiNguoiDung {
     // Địa chỉ đầy đủ
     public String getDiaChiDayDu() {
         StringBuilder sb = new StringBuilder();
-        if (diaChiDong1 != null && !diaChiDong1.isBlank()) sb.append(diaChiDong1);
-        if (phuongXa != null && !phuongXa.isBlank()) sb.append(", ").append(phuongXa);
-        if (quanHuyen != null && !quanHuyen.isBlank()) sb.append(", ").append(quanHuyen);
-        if (tinhThanh != null && !tinhThanh.isBlank()) sb.append(", ").append(tinhThanh);
+        if (diaChiDong1 != null && !diaChiDong1.isBlank())
+            sb.append(diaChiDong1);
+        if (phuongXa != null && !phuongXa.isBlank())
+            sb.append(", ").append(phuongXa);
+        if (quanHuyen != null && !quanHuyen.isBlank())
+            sb.append(", ").append(quanHuyen);
+        if (tinhThanh != null && !tinhThanh.isBlank())
+            sb.append(", ").append(tinhThanh);
         return sb.toString();
     }
 }

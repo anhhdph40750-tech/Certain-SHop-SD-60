@@ -8,7 +8,11 @@ import java.util.List;
 /**
  * DTO tạo/cập nhật sản phẩm
  */
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class SanPhamDto {
 
     private Long id;

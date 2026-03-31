@@ -26,6 +26,9 @@ public interface DonHangRepository extends JpaRepository<DonHang, Long> {
 
     Page<DonHang> findByNguoiDungId(Long nguoiDungId, Pageable pageable);
 
+    // Lọc đơn hàng với trạng thái cụ thể
+    Page<DonHang> findByNguoiDungIdAndTrangThaiDonHang(Long nguoiDungId, String trangThaiDonHang, Pageable pageable);
+
     @Query("SELECT dh FROM DonHang dh WHERE " +
            "(:trangThai IS NULL OR dh.trangThaiDonHang = :trangThai) " +
            "AND (:tuKhoa IS NULL OR LOWER(dh.maDonHang) LIKE LOWER(CONCAT('%', :tuKhoa, '%')) " +

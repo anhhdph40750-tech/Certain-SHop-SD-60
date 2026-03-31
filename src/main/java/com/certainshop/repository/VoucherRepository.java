@@ -21,6 +21,10 @@ public interface VoucherRepository extends JpaRepository<Voucher, Long> {
     @Query("SELECT v FROM Voucher v WHERE v.trangThai = true ORDER BY v.thoiGianTao DESC")
     List<Voucher> findAllActive();
 
+    // Find ALL vouchers (both active and inactive)
+    @Query("SELECT v FROM Voucher v ORDER BY v.thoiGianTao DESC")
+    List<Voucher> findAllVouchers();
+
     // Find all valid vouchers (active, within date range, not exceeded max usage)
     @Query("SELECT v FROM Voucher v WHERE v.trangThai = true " +
            "AND :now >= v.ngayBatDau AND :now <= v.ngayKetThuc " +
