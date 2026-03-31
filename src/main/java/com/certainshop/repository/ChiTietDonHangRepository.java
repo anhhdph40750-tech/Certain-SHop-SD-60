@@ -15,10 +15,14 @@ public interface ChiTietDonHangRepository extends JpaRepository<ChiTietDonHang, 
 
     // Sản phẩm bán chạy theo tháng
     @Query("SELECT ctdh.bienThe.sanPham.id, ctdh.bienThe.sanPham.tenSanPham, SUM(ctdh.soLuong) as tongSoLuong " +
-           "FROM ChiTietDonHang ctdh JOIN ctdh.donHang dh " +
-           "WHERE dh.trangThaiDonHang = 'HOAN_TAT' " +
-           "AND dh.thoiGianTao >= :tuNgay " +
-           "GROUP BY ctdh.bienThe.sanPham.id, ctdh.bienThe.sanPham.tenSanPham " +
-           "ORDER BY tongSoLuong DESC")
-    List<Object[]> thongKeSanPhamBanChay(@Param("tuNgay") LocalDateTime tuNgay);
+            "FROM ChiTietDonHang ctdh JOIN ctdh.donHang dh " +
+            "WHERE dh.trangThaiDonHang = 'HOAN_TAT' " +
+            "AND dh.thoiGianTao >= :tuNgay " +
+            "AND dh.thoiGianTao < :denNgay " +
+            "GROUP BY ctdh.bienThe.sanPham.id, ctdh.bienThe.sanPham.tenSanPham " +
+            "ORDER BY tongSoLuong DESC")
+    List<Object[]> thongKeSanPhamBanChay(
+            @Param("tuNgay") LocalDateTime tuNgay,
+            @Param("denNgay") LocalDateTime denNgay
+    );
 }
