@@ -79,14 +79,21 @@ public class ThongKeService {
      * Sản phẩm bán chạy trong 1 tháng gần nhất
      */
     public List<Object[]> sanPhamBanChay() {
-        LocalDateTime tuNgay = LocalDate.now()
-                .withDayOfMonth(1)
-                .atStartOfDay();
 
-        LocalDateTime denNgay = tuNgay.plusMonths(1);
+        LocalDateTime denNgay = LocalDateTime.now();
+        LocalDateTime tuNgay = denNgay.minusDays(30);
 
         return chiTietDonHangRepository.thongKeSanPhamBanChay(tuNgay, denNgay);
     }
+//    public List<Object[]> sanPhamBanChay() {
+//        LocalDateTime tuNgay = LocalDate.now()
+//                .withDayOfMonth(1)
+//                .atStartOfDay();
+//
+//        LocalDateTime denNgay = tuNgay.plusMonths(1);
+//
+//        return chiTietDonHangRepository.thongKeSanPhamBanChay(tuNgay, denNgay);
+//    }
 
 
 //    public List<Object[]> sanPhamBanChay() {

@@ -275,7 +275,9 @@ public class DonHangService {
         //    truKho(donHang);
        // }
 
-        if("COD".equalsIgnoreCase(donHang.getPhuongThucThanhToan()) && TrangThaiDonHang.DA_XAC_NHAN.equals(trangThaiMoi)
+        if("COD".equalsIgnoreCase(donHang.getPhuongThucThanhToan())
+                && TrangThaiDonHang.CHO_XAC_NHAN.equals(trangThaiHienTai)
+                && TrangThaiDonHang.DA_XAC_NHAN.equals(trangThaiMoi)
                 || ("VNPAY".equalsIgnoreCase(donHang.getPhuongThucThanhToan())
                 && TrangThaiDonHang.DA_THANH_TOAN.equals(trangThaiMoi))){
             truKho(donHang);
