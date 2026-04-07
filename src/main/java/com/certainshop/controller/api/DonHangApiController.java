@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -163,6 +164,11 @@ public class DonHangApiController {
             @RequestParam(defaultValue = "15") int kichThuocTrang,
             @RequestParam(required = false) String trangThai,
             @RequestParam(required = false) String tuKhoa,
+            @RequestParam(required = false) String loaiDonHang,
+            @RequestParam(required = false) String phuongThucThanhToan,
+            @RequestParam(required = false) LocalDateTime tuNgay,
+            @RequestParam(required = false) LocalDateTime denNgay,
+
             @RequestParam(defaultValue = "desc") String sort) {
 
         Sort sortObj = "asc".equalsIgnoreCase(sort)
@@ -171,7 +177,7 @@ public class DonHangApiController {
 
         Pageable pageable = PageRequest.of(trang, kichThuocTrang, sortObj);
 
-        Page<DonHang> page = donHangRepository.findDonHangAdmin(trangThai, tuKhoa, pageable);
+        Page<DonHang> page = donHangRepository.findDonHangAdmin(trangThai, loaiDonHang, phuongThucThanhToan, tuKhoa, tuNgay, denNgay,  pageable);
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("danhSach", page.getContent().stream().map(this::toDonHangSummary).collect(Collectors.toList()));
@@ -231,6 +237,8 @@ public class DonHangApiController {
 
         return ResponseEntity.ok("Đã chuyển sang ĐANG_GIAO");
     }
+
+
 
     @PostMapping("/khuyen-mai/kiem-tra")
     public ResponseEntity<?> kiemTraKhuyenMai(
@@ -375,6 +383,13 @@ public class DonHangApiController {
         if (dh.getNguoiDung() != null) {
             m.put("nguoiDung", Map.of("id", dh.getNguoiDung().getId(), "tenDangNhap", dh.getNguoiDung().getTenDangNhap(), "hoTen", dh.getNguoiDung().getHoTen() != null ? dh.getNguoiDung().getHoTen() : ""));
         }
+        if (dh.getNhanVien() != null) {
+            m.put("nhanVien", Map.of(
+                    "id", dh.getNhanVien().getId(),
+                    "tenDangNhap", dh.getNhanVien().getTenDangNhap(),
+                    "hoTen", dh.getNhanVien().getHoTen() != null ? dh.getNhanVien().getHoTen() : ""
+            ));
+        }
         if (dh.getDanhSachChiTiet() != null && !dh.getDanhSachChiTiet().isEmpty()) {
             m.put("danhSachChiTiet", dh.getDanhSachChiTiet().stream().map(ct -> {
                 Map<String, Object> ctMap = new LinkedHashMap<>();
@@ -426,6 +441,13 @@ public class DonHangApiController {
                 return ctMap;
             }).collect(Collectors.toList()));
         }
+        if (dh.getNhanVien() != null) {
+            m.put("nhanVien", Map.of(
+                    "id", dh.getNhanVien().getId(),
+                    "tenDangNhap", dh.getNhanVien().getTenDangNhap(),
+                    "hoTen", dh.getNhanVien().getHoTen() != null ? dh.getNhanVien().getHoTen() : ""
+            ));
+        }
         if (dh.getLichSuTrangThai() != null) {
             m.put("lichSuTrangThai", dh.getLichSuTrangThai().stream().map(ls -> {
                 Map<String, Object> lsMap = new LinkedHashMap<>();
@@ -434,6 +456,9 @@ public class DonHangApiController {
                 lsMap.put("trangThai", ls.getTrangThaiMoi() != null ? ls.getTrangThaiMoi() : "");
                 lsMap.put("ghiChu", ls.getGhiChu() != null ? ls.getGhiChu() : "");
                 lsMap.put("thoiGian", ls.getThoiGian() != null ? ls.getThoiGian().toString() : "");
+                if (ls.getNguoiThayDoi() != null) {
+                    lsMap.put("nguoiThayDoi", ls.getNguoiThayDoi().getHoTen());
+                }
                 lsMap.put("thoiGianTao", ls.getThoiGian() != null ? ls.getThoiGian().toString() : "");
                 return lsMap;
             }).collect(Collectors.toList()));

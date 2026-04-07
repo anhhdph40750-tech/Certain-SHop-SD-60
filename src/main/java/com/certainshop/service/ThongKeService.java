@@ -54,6 +54,7 @@ public class ThongKeService {
         return data;
     }
 
+
     /**
      * Thống kê doanh thu theo ngày (trong khoảng)
      */
@@ -110,6 +111,12 @@ public class ThongKeService {
 //
 //        return chiTietDonHangRepository.thongKeSanPhamBanChay(tuNgay, denNgay);
 //    }
+    /**
+     * Thống kê số hóa đơn hoàn tất theo ngày trong khoảng thời gian
+     */
+    public List<Object[]> demHoaDonHoanTatTheoNgay(LocalDateTime tuNgay, LocalDateTime denNgay) {
+        return donHangRepository.demHoaDonHoanTatTheoNgay(tuNgay, denNgay);
+    }
 
     /**
      * Tổng doanh thu

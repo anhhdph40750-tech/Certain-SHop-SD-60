@@ -48,6 +48,30 @@ public class QuanLyThongKeApiController {
         }
     }
 
+    @GetMapping("/don-hoan-tat")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> hoaDonHoanTatTheoNgay(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime tuNgay,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime denNgay) {
+        try {
+            // Lấy chi tiết số hóa đơn hoàn tất theo ngày
+            List<Object[]> chiTiet = thongKeService.demHoaDonHoanTatTheoNgay(tuNgay, denNgay);
+
+            // Tổng số hóa đơn hoàn tất trong khoảng
+            long tongHoaDon = chiTiet.stream()
+                    .mapToLong(row -> ((Number) row[1]).longValue())
+                    .sum();
+
+            Map<String, Object> data = Map.of(
+                    "chiTiet", chiTiet,
+                    "tongHoaDon", tongHoaDon
+            );
+
+            return ResponseEntity.ok(ApiResponse.ok(data));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.loi(e.getMessage()));
+        }
+    }
+
     @GetMapping("/san-pham-ban-chay")
     public ResponseEntity<ApiResponse<List<Object[]>>> sanPhamBanChay() {
         return ResponseEntity.ok(ApiResponse.ok(thongKeService.sanPhamBanChay()));

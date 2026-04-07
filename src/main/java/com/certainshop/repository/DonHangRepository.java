@@ -30,11 +30,23 @@ public interface DonHangRepository extends JpaRepository<DonHang, Long> {
     Page<DonHang> findByNguoiDungIdAndTrangThaiDonHang(Long nguoiDungId, String trangThaiDonHang, Pageable pageable);
 
     @Query("SELECT dh FROM DonHang dh WHERE " +
-           "(:trangThai IS NULL OR dh.trangThaiDonHang = :trangThai) " +
-           "AND (:tuKhoa IS NULL OR LOWER(dh.maDonHang) LIKE LOWER(CONCAT('%', :tuKhoa, '%')) " +
-           "OR LOWER(dh.tenNguoiNhan) LIKE LOWER(CONCAT('%', :tuKhoa, '%')) " +
-           "OR dh.sdtNguoiNhan LIKE CONCAT('%', :tuKhoa, '%')) ")
-    Page<DonHang> findDonHangAdmin(@Param("trangThai") String trangThai, @Param("tuKhoa") String tuKhoa, Pageable pageable);
+            "(:trangThai IS NULL OR dh.trangThaiDonHang = :trangThai) " +
+            "AND (:loaiDonHang IS NULL OR dh.loaiDonHang = :loaiDonHang) " +
+            "AND (:phuongThucThanhToan IS NULL OR dh.phuongThucThanhToan = :phuongThucThanhToan) " +
+            "AND (:tuNgay IS NULL OR dh.thoiGianTao >= :tuNgay) " +
+            "AND (:denNgay IS NULL OR dh.thoiGianTao <= :denNgay) " +
+            "AND (:tuKhoa IS NULL OR (" +
+            "LOWER(dh.maDonHang) LIKE LOWER(CONCAT('%', :tuKhoa, '%')) " +
+            "OR LOWER(dh.tenNguoiNhan) LIKE LOWER(CONCAT('%', :tuKhoa, '%')) " +
+            "OR dh.sdtNguoiNhan LIKE CONCAT('%', :tuKhoa, '%')" +
+            "))")
+    Page<DonHang> findDonHangAdmin(
+            @Param("trangThai") String trangThai,
+            @Param("loaiDonHang") String loaiDonHang,
+            @Param("phuongThucThanhToan") String phuongThucThanhToan,
+            @Param("tuKhoa") String tuKhoa,
+            LocalDateTime tuNgay, LocalDateTime denNgay, Pageable pageable
+    );
 
     // Hóa đơn chờ tại quầy (tối đa 5)
     @Query("SELECT dh FROM DonHang dh WHERE dh.trangThaiDonHang = 'HOA_DON_CHO' AND dh.loaiDonHang = 'TAI_QUAY' ORDER BY dh.thoiGianTao ASC")
@@ -119,6 +131,18 @@ public interface DonHangRepository extends JpaRepository<DonHang, Long> {
            "WHERE dh.thoiGianTao BETWEEN :tuNgay AND :denNgay " +
            "GROUP BY dh.trangThaiDonHang")
     List<Object[]> demDonHangTheoTrangThai(
+            @Param("tuNgay") LocalDateTime tuNgay,
+            @Param("denNgay") LocalDateTime denNgay);
+
+    // Đếm số hóa đơn hoàn tất theo từng ngày
+    @Query(value = "SELECT CAST(ThoiGianTao AS DATE) AS ngay, COUNT(*) AS soLuong " +
+            "FROM DonHang " +
+            "WHERE TrangThaiDonHang <> 'DA_HUY' " +
+            "AND ThoiGianTao BETWEEN :tuNgay AND :denNgay " +
+            "GROUP BY CAST(ThoiGianTao AS DATE) " +
+            "ORDER BY CAST(ThoiGianTao AS DATE) ASC",
+            nativeQuery = true)
+    List<Object[]> demHoaDonHoanTatTheoNgay(
             @Param("tuNgay") LocalDateTime tuNgay,
             @Param("denNgay") LocalDateTime denNgay);
 
