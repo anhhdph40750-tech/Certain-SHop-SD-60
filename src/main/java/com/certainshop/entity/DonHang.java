@@ -8,7 +8,11 @@ import java.util.List;
 
 @Entity
 @Table(name = "DonHang")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class DonHang {
 
     @Id
@@ -116,7 +120,7 @@ public class DonHang {
     protected void truocKhiTao() {
         LocalDateTime now = LocalDateTime.now();
         thoiGianTao = now;
-        thoiGianCapNhat = now;  // Set on creation too
+        thoiGianCapNhat = now; // Set on creation too
     }
 
     @PreUpdate

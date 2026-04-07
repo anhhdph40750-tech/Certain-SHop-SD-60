@@ -11,7 +11,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
+import com.certainshop.util.ExcelHelper;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import java.io.InputStream;
 import java.nio.file.*;
 import java.text.Normalizer;
 import java.time.LocalDateTime;
@@ -33,26 +39,26 @@ public class SanPhamService {
     private final MauSacRepository mauSacRepository;
     private final ChatLieuRepository chatLieuRepository;
     private final HinhAnhBienTheRepository hinhAnhBienTheRepository;
-    private final jakarta.persistence.EntityManager entityManager;
+    private final ChiTietDonHangRepository chiTietDonHangRepository;
 
     /**
      * Tạo sản phẩm mới cùng biến thể
      */
     public SanPham taoSanPham(SanPhamDto dto) {
-        // Validate input
         if (dto.getTenSanPham() == null || dto.getTenSanPham().trim().isEmpty()) {
             throw new IllegalArgumentException("Tên sản phẩm không được để trống");
         }
         if (dto.getDanhMucId() == null) {
             throw new IllegalArgumentException("Danh mục không được để trống");
         }
-        if (dto.getGiaGoc() == null) {
-            throw new IllegalArgumentException("Giá gốc không được để trống");
-        }
-        
+
         // Validate trùng tên
         if (sanPhamRepository.existsByTenSanPham(dto.getTenSanPham())) {
             throw new IllegalArgumentException("Tên sản phẩm đã tồn tại");
+        }
+
+        if (dto.getGiaGoc() == null || dto.getGiaGoc().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Giá gốc phải lớn hơn 0");
         }
 
         DanhMuc danhMuc = danhMucRepository.findById(dto.getDanhMucId())
@@ -88,22 +94,22 @@ public class SanPhamService {
      * Cập nhật sản phẩm
      */
     public SanPham capNhatSanPham(Long id, SanPhamDto dto) {
-        // Validate input
+        SanPham sanPham = sanPhamRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
+
         if (dto.getTenSanPham() == null || dto.getTenSanPham().trim().isEmpty()) {
             throw new IllegalArgumentException("Tên sản phẩm không được để trống");
         }
         if (dto.getDanhMucId() == null) {
             throw new IllegalArgumentException("Danh mục không được để trống");
         }
-        if (dto.getGiaGoc() == null) {
-            throw new IllegalArgumentException("Giá gốc không được để trống");
-        }
-        
-        SanPham sanPham = sanPhamRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
 
         if (sanPhamRepository.existsByTenSanPhamAndIdNot(dto.getTenSanPham(), id)) {
             throw new IllegalArgumentException("Tên sản phẩm đã tồn tại");
+        }
+
+        if (dto.getGiaGoc() == null || dto.getGiaGoc().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Giá gốc phải lớn hơn 0");
         }
 
         DanhMuc danhMuc = danhMucRepository.findById(dto.getDanhMucId())
@@ -127,33 +133,156 @@ public class SanPhamService {
     }
 
     /**
-     * Xóa sản phẩm và tất cả biến thể của nó (soft delete)
+     * Ngừng bán sản phẩm (soft delete - chuyển trạng thái sang NGUNG_BAN)
      */
-    @Transactional
     public void xoaSanPham(Long id) {
         SanPham sanPham = sanPhamRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
-        
-        // Soft delete tất cả biến thể
-        List<BienThe> bienThes = bienTheRepository.findBySanPhamId(id);
-        for (BienThe bt : bienThes) {
-            // Merge to re-attach detached entity to persistence context
-            BienThe managedBienThe = entityManager.merge(bt);
-            managedBienThe.setTrangThai(false);  // Now properly sets trangThai Boolean field
+
+        sanPham.setTrangThaiSanPham("NGUNG_BAN");
+        sanPham.setTrangThai(false);
+        sanPhamRepository.save(sanPham);
+    }
+
+    /**
+     * Toggle trạng thái sản phẩm: DANG_BAN ↔ NGUNG_BAN
+     */
+    public String toggleTrangThai(Long id) {
+        SanPham sanPham = sanPhamRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
+
+        if ("DANG_BAN".equals(sanPham.getTrangThaiSanPham())) {
+            sanPham.setTrangThaiSanPham("NGUNG_BAN");
+            sanPham.setTrangThai(false);
+        } else {
+            sanPham.setTrangThaiSanPham("DANG_BAN");
+            sanPham.setTrangThai(true);
         }
-        
-        // Soft delete sản phẩm
-        SanPham managedSanPham = entityManager.merge(sanPham);
-        managedSanPham.setTrangThai(false);  // Now properly sets trangThai Boolean field
-        
-        // Flush to ensure updates are persisted
-        entityManager.flush();
+        sanPhamRepository.save(sanPham);
+        return sanPham.getTrangThaiSanPham();
+    }
+
+    public ByteArrayInputStream xuatExcel() {
+        List<SanPham> sanPhams = sanPhamRepository.findAll();
+        return ExcelHelper.sanPhamsToExcel(sanPhams);
+    }
+
+    @Transactional
+    public void nhapExcel(MultipartFile file) {
+        try {
+            Workbook workbook = new XSSFWorkbook(file.getInputStream());
+            Sheet sheet = workbook.getSheet(ExcelHelper.SHEET);
+            if (sheet == null) {
+                sheet = workbook.getSheetAt(0);
+            }
+
+            java.util.Iterator<Row> rows = sheet.iterator();
+            int rowNumber = 0;
+
+            while (rows.hasNext()) {
+                Row currentRow = rows.next();
+                if (rowNumber == 0) {
+                    rowNumber++;
+                    continue; // Skip header
+                }
+
+                String maSanPham = "";
+                if (currentRow.getCell(0) != null) {
+                    if (currentRow.getCell(0).getCellType() == CellType.STRING) {
+                         maSanPham = currentRow.getCell(0).getStringCellValue();
+                    } else if (currentRow.getCell(0).getCellType() == CellType.NUMERIC) {
+                         maSanPham = String.valueOf((long) currentRow.getCell(0).getNumericCellValue());
+                    }
+                }
+                
+                String tenSanPham = currentRow.getCell(1) != null ? currentRow.getCell(1).getStringCellValue() : "";
+                double giaGoc = currentRow.getCell(2) != null ? currentRow.getCell(2).getNumericCellValue() : 0;
+                double giaBan = currentRow.getCell(3) != null ? currentRow.getCell(3).getNumericCellValue() : 0;
+                long danhMucId = currentRow.getCell(4) != null ? (long) currentRow.getCell(4).getNumericCellValue() : 0;
+                long thuongHieuId = currentRow.getCell(5) != null ? (long) currentRow.getCell(5).getNumericCellValue() : 0;
+
+                long kichThuocId = currentRow.getCell(6) != null ? (long) currentRow.getCell(6).getNumericCellValue() : 0;
+                long mauSacId = currentRow.getCell(7) != null ? (long) currentRow.getCell(7).getNumericCellValue() : 0;
+                double giaBienThe = currentRow.getCell(8) != null ? currentRow.getCell(8).getNumericCellValue() : 0;
+                int soLuongTon = currentRow.getCell(9) != null ? (int) currentRow.getCell(9).getNumericCellValue() : 0;
+
+                if (tenSanPham.trim().isEmpty()) {
+                    continue;
+                }
+
+                SanPham sp = null;
+                if (!maSanPham.trim().isEmpty()) {
+                    final String mSP = maSanPham.trim();
+                    Optional<SanPham> opt = sanPhamRepository.findAll().stream().filter(s -> mSP.equals(s.getMaSanPham())).findFirst();
+                    if (opt.isPresent()) {
+                        sp = opt.get();
+                    }
+                }
+
+                if (sp == null) {
+                    sp = new SanPham();
+                    sp.setMaSanPham(maSanPham.isEmpty() ? "SP_" + UUID.randomUUID().toString().substring(0, 8) : maSanPham);
+                    sp.setTenSanPham(tenSanPham);
+                    sp.setGiaGoc(BigDecimal.valueOf(giaGoc));
+                    sp.setGiaBan(BigDecimal.valueOf(giaBan));
+                    sp.setDuongDan(taoDuongDan(tenSanPham) + "-" + System.currentTimeMillis() % 1000);
+                    sp.setTrangThaiSanPham("DANG_BAN");
+                    sp.setTrangThai(true);
+
+                    if (danhMucId > 0) {
+                        danhMucRepository.findById(danhMucId).ifPresent(sp::setDanhMuc);
+                    }
+                    if (thuongHieuId > 0) {
+                        thuongHieuRepository.findById(thuongHieuId).ifPresent(sp::setThuongHieu);
+                    }
+                    sp = sanPhamRepository.save(sp);
+                }
+
+                if (kichThuocId > 0 && mauSacId > 0) {
+                    final SanPham finalSp = sp;
+                    boolean exists = false;
+                    List<BienThe> bts = bienTheRepository.findBySanPhamId(finalSp.getId());
+                    if (bts != null && !bts.isEmpty()) {
+                        exists = bts.stream().anyMatch(bt ->
+                                bt.getKichThuoc() != null && bt.getKichThuoc().getId() == kichThuocId &&
+                                bt.getMauSac() != null && bt.getMauSac().getId() == mauSacId
+                        );
+                    }
+                    if (!exists) {
+                        BienThe bt = new BienThe();
+                        bt.setSanPham(finalSp);
+                        kichThuocRepository.findById(kichThuocId).ifPresent(bt::setKichThuoc);
+                        mauSacRepository.findById(mauSacId).ifPresent(bt::setMauSac);
+                        bt.setGia(BigDecimal.valueOf(giaBienThe > 0 ? giaBienThe : giaBan));
+                        bt.setSoLuongTon(soLuongTon);
+                        bt.setMacDinh(bts == null || bts.isEmpty());
+                        bienTheRepository.save(bt);
+                    }
+                }
+            }
+            workbook.close();
+        } catch (IOException e) {
+            throw new RuntimeException("Lỗi nhập dữ liệu từ file Excel: " + e.getMessage());
+        }
     }
 
     /**
      * Tạo biến thể cho sản phẩm
      */
     public BienThe taoBienThe(Long sanPhamId, BienTheDto dto) {
+        if (dto.getGia() == null || dto.getGia().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Giá biến thể phải lớn hơn 0");
+        }
+        if (dto.getSoLuongTon() == null || dto.getSoLuongTon() < 0) {
+            throw new IllegalArgumentException("Số lượng tồn không được âm");
+        }
+        if (dto.getKichThuocId() == null) {
+            throw new IllegalArgumentException("Kích thước không được để trống");
+        }
+        if (dto.getMauSacId() == null) {
+            throw new IllegalArgumentException("Màu sắc không được để trống");
+        }
+
         SanPham sanPham = sanPhamRepository.findById(sanPhamId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
 
@@ -165,10 +294,10 @@ public class SanPhamService {
             throw new IllegalArgumentException("Biến thể với tổ hợp kích thước, màu sắc, chất liệu này đã tồn tại");
         }
 
-        KichThuoc kichThuoc = dto.getKichThuocId() != null ?
-                kichThuocRepository.findById(dto.getKichThuocId()).orElse(null) : null;
-        MauSac mauSac = dto.getMauSacId() != null ?
-                mauSacRepository.findById(dto.getMauSacId()).orElse(null) : null;
+        KichThuoc kichThuoc = kichThuocRepository.findById(dto.getKichThuocId())
+                .orElseThrow(() -> new RuntimeException("Kích thước không tồn tại"));
+        MauSac mauSac = mauSacRepository.findById(dto.getMauSacId())
+                .orElseThrow(() -> new RuntimeException("Màu sắc không tồn tại"));
         ChatLieu chatLieu = dto.getChatLieuId() != null ?
                 chatLieuRepository.findById(dto.getChatLieuId()).orElse(null) : null;
 
@@ -185,7 +314,7 @@ public class SanPhamService {
 
         // Nếu là mặc định, bỏ mặc định của các biến thể khác
         if (Boolean.TRUE.equals(dto.getMacDinh())) {
-            danhSachBienTheCuaSanPhamQuanLy(sanPhamId).forEach(bt -> {
+            danhSachBienTheCuaSanPham(sanPhamId).forEach(bt -> {
                 bt.setMacDinh(false);
                 bienTheRepository.save(bt);
             });
@@ -200,27 +329,27 @@ public class SanPhamService {
     public List<BienThe> taoBulkBienThe(Long sanPhamId, List<BienTheDto> danhSach) {
         SanPham sanPham = sanPhamRepository.findById(sanPhamId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
-        
+
         List<BienThe> result = new ArrayList<>();
         boolean daDatMacDinh = false;
-        
+
         // Kiểm tra xem có biến thể mặc định nào chưa
         List<BienThe> existingVariants = bienTheRepository.findBySanPhamId(sanPhamId);
         daDatMacDinh = existingVariants.stream().anyMatch(BienThe::getMacDinh);
-        
+
         for (int i = 0; i < danhSach.size(); i++) {
             BienTheDto dto = danhSach.get(i);
             dto.setSanPhamId(sanPhamId);
-            
+
             // Nếu chưa có biến thể mặc định, set biến thể đầu tiên làm mặc định
             if (!daDatMacDinh && i == 0) {
                 dto.setMacDinh(true);
                 daDatMacDinh = true;
             }
-            
+
             result.add(taoBienThe(sanPhamId, dto));
         }
-        
+
         return result;
     }
 
@@ -239,6 +368,19 @@ public class SanPhamService {
         }
     }
     public BienThe capNhatBienThe(Long bienTheId, BienTheDto dto) {
+        if (dto.getGia() == null || dto.getGia().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Giá biến thể phải lớn hơn 0");
+        }
+        if (dto.getSoLuongTon() == null || dto.getSoLuongTon() < 0) {
+            throw new IllegalArgumentException("Số lượng tồn không được âm");
+        }
+        if (dto.getKichThuocId() == null) {
+            throw new IllegalArgumentException("Kích thước không được để trống");
+        }
+        if (dto.getMauSacId() == null) {
+            throw new IllegalArgumentException("Màu sắc không được để trống");
+        }
+
         BienThe bienThe = bienTheRepository.findById(bienTheId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy biến thể"));
 
@@ -249,10 +391,10 @@ public class SanPhamService {
             throw new IllegalArgumentException("Biến thể này đã tồn tại");
         }
 
-        KichThuoc kichThuoc = dto.getKichThuocId() != null ?
-                kichThuocRepository.findById(dto.getKichThuocId()).orElse(null) : null;
-        MauSac mauSac = dto.getMauSacId() != null ?
-                mauSacRepository.findById(dto.getMauSacId()).orElse(null) : null;
+        KichThuoc kichThuoc = kichThuocRepository.findById(dto.getKichThuocId())
+                .orElseThrow(() -> new RuntimeException("Kích thước không tồn tại"));
+        MauSac mauSac = mauSacRepository.findById(dto.getMauSacId())
+                .orElseThrow(() -> new RuntimeException("Màu sắc không tồn tại"));
         ChatLieu chatLieu = dto.getChatLieuId() != null ?
                 chatLieuRepository.findById(dto.getChatLieuId()).orElse(null) : null;
 
@@ -264,7 +406,7 @@ public class SanPhamService {
         bienThe.setTrangThai(dto.getTrangThai() != null ? dto.getTrangThai() : true);
 
         if (Boolean.TRUE.equals(dto.getMacDinh())) {
-            danhSachBienTheCuaSanPhamQuanLy(bienThe.getSanPham().getId()).forEach(bt -> {
+            danhSachBienTheCuaSanPham(bienThe.getSanPham().getId()).forEach(bt -> {
                 bt.setMacDinh(false);
                 bienTheRepository.save(bt);
             });
@@ -280,6 +422,12 @@ public class SanPhamService {
     public void xoaBienThe(Long bienTheId) {
         BienThe bienThe = bienTheRepository.findById(bienTheId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy biến thể"));
+                
+        // Block deletion if variant has orders
+        if (chiTietDonHangRepository.existsByBienTheId(bienTheId)) {
+            throw new RuntimeException("Biến thể đã phát sinh đơn hàng, bạn chỉ có thể tắt");
+        }
+        
         bienThe.setTrangThai(false);
         bienTheRepository.save(bienThe);
     }
@@ -288,7 +436,19 @@ public class SanPhamService {
      * Upload ảnh biến thể
      */
     public HinhAnhBienThe uploadAnhBienThe(Long bienTheId, MultipartFile file,
-                                            boolean laAnhChinh, String uploadDir) throws IOException {
+                                           boolean laAnhChinh, String uploadDir) throws IOException {
+        if (file == null || file.isEmpty() || file.getSize() <= 0) {
+            throw new IllegalArgumentException("File ảnh không hợp lệ");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("File phải là ảnh (image/*)");
+        }
+        long maxSize = 5L * 1024L * 1024L; // 5MB
+        if (file.getSize() > maxSize) {
+            throw new IllegalArgumentException("Dung lượng ảnh không được vượt quá 5MB");
+        }
+
         BienThe bienThe = bienTheRepository.findById(bienTheId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy biến thể"));
 
@@ -339,26 +499,19 @@ public class SanPhamService {
 
     @Transactional(readOnly = true)
     public Page<SanPham> timKiemChoKhachHang(String tuKhoa, Long danhMucId,
-                                               Long thuongHieuId, Pageable pageable) {
+                                             Long thuongHieuId, Pageable pageable) {
         return sanPhamRepository.timKiemVaLoc(tuKhoa, danhMucId, thuongHieuId, pageable);
     }
 
     @Transactional(readOnly = true)
     public Page<SanPham> timKiemAdmin(String tuKhoa, Long danhMucId,
-                                       Long thuongHieuId, Boolean trangThai, Pageable pageable) {
+                                      Long thuongHieuId, Boolean trangThai, Pageable pageable) {
         String trangThaiStr = trangThai == null ? null : (trangThai ? "DANG_BAN" : "NGUNG_BAN");
         return sanPhamRepository.timKiemAdmin(tuKhoa, danhMucId, thuongHieuId, trangThaiStr, pageable);
     }
 
     @Transactional(readOnly = true)
     public List<BienThe> danhSachBienTheCuaSanPham(Long sanPhamId) {
-        // For customers: only return active variants (trangThai = true)
-        return bienTheRepository.findBySanPhamIdAndTrangThaiTrue(sanPhamId);
-    }
-
-    @Transactional(readOnly = true)
-    public List<BienThe> danhSachBienTheCuaSanPhamQuanLy(Long sanPhamId) {
-        // For admin: return ALL variants including soft-deleted (trangThai = false)
         return bienTheRepository.findBySanPhamId(sanPhamId);
     }
 

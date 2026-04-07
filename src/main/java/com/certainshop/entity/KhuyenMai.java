@@ -7,7 +7,11 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "KhuyenMai")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class KhuyenMai {
 
     @Id
@@ -76,10 +80,14 @@ public class KhuyenMai {
      */
     public boolean laHopLe() {
         LocalDateTime now = LocalDateTime.now();
-        if (!"HOAT_DONG".equals(trangThaiKhuyenMai)) return false;
-        if (ngayBatDau != null && now.isBefore(ngayBatDau)) return false;
-        if (ngayKetThuc != null && now.isAfter(ngayKetThuc)) return false;
-        if (soLanSuDungToiDa != null && soLanDaSuDung != null && soLanDaSuDung >= soLanSuDungToiDa) return false;
+        if (!"HOAT_DONG".equals(trangThaiKhuyenMai))
+            return false;
+        if (ngayBatDau != null && now.isBefore(ngayBatDau))
+            return false;
+        if (ngayKetThuc != null && now.isAfter(ngayKetThuc))
+            return false;
+        if (soLanSuDungToiDa != null && soLanDaSuDung != null && soLanDaSuDung >= soLanSuDungToiDa)
+            return false;
         return true;
     }
 
@@ -87,8 +95,10 @@ public class KhuyenMai {
      * Tính số tiền giảm
      */
     public BigDecimal tinhSoTienGiam(BigDecimal tongTienGoc) {
-        if (!laHopLe()) return BigDecimal.ZERO;
-        if (giaTriDonHangToiThieu != null && tongTienGoc.compareTo(giaTriDonHangToiThieu) < 0) return BigDecimal.ZERO;
+        if (!laHopLe())
+            return BigDecimal.ZERO;
+        if (giaTriDonHangToiThieu != null && tongTienGoc.compareTo(giaTriDonHangToiThieu) < 0)
+            return BigDecimal.ZERO;
 
         BigDecimal soTienGiam;
         if ("PERCENT".equalsIgnoreCase(loaiGiamGia)) {
@@ -99,7 +109,8 @@ public class KhuyenMai {
         } else {
             soTienGiam = giaTriGiam;
         }
-        if (soTienGiam.compareTo(tongTienGoc) > 0) soTienGiam = tongTienGoc;
+        if (soTienGiam.compareTo(tongTienGoc) > 0)
+            soTienGiam = tongTienGoc;
         return soTienGiam;
     }
 }

@@ -111,7 +111,7 @@ public class DiaChiApiController {
      */
     @GetMapping("/{diaChiId}")
     public ResponseEntity<?> layChiTietDiaChi(
-            @PathVariable Long diaChiId,
+            @PathVariable("diaChiId") Long diaChiId,
             @AuthenticationPrincipal UserDetails userDetails) {
         try {
             NguoiDung nguoiDung = getNguoiDung(userDetails);
@@ -150,7 +150,7 @@ public class DiaChiApiController {
      */
     @PutMapping("/{diaChiId}")
     public ResponseEntity<?> capNhatDiaChi(
-            @PathVariable Long diaChiId,
+            @PathVariable("diaChiId") Long diaChiId,
             @RequestBody DiaChiChiTietDto dto,
             @AuthenticationPrincipal UserDetails userDetails) {
         try {
@@ -169,7 +169,7 @@ public class DiaChiApiController {
      */
     @DeleteMapping("/{diaChiId}")
     public ResponseEntity<?> xoaDiaChi(
-            @PathVariable Long diaChiId,
+            @PathVariable("diaChiId") Long diaChiId,
             @AuthenticationPrincipal UserDetails userDetails) {
         try {
             NguoiDung nguoiDung = getNguoiDung(userDetails);
@@ -187,7 +187,7 @@ public class DiaChiApiController {
      */
     @PostMapping("/{diaChiId}/set-default")
     public ResponseEntity<?> datLamMacDinh(
-            @PathVariable Long diaChiId,
+            @PathVariable("diaChiId") Long diaChiId,
             @AuthenticationPrincipal UserDetails userDetails) {
         try {
             NguoiDung nguoiDung = getNguoiDung(userDetails);

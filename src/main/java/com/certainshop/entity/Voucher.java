@@ -7,9 +7,13 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "Voucher")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Voucher {
-
+    // out tai khoan lam
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "Id")
@@ -63,8 +67,9 @@ public class Voucher {
     protected void onCreate() {
         LocalDateTime now = LocalDateTime.now();
         thoiGianTao = now;
-        thoiGianCapNhat = now;  // Set on creation too, not just on update
-        if (trangThai == null) trangThai = true;
+        thoiGianCapNhat = now; // Set on creation too, not just on update
+        if (trangThai == null)
+            trangThai = true;
     }
 
     @PreUpdate
@@ -73,13 +78,17 @@ public class Voucher {
     }
 
     /**
-     * Kiểm tra voucher có được áp dụng được không (bỏ qua điều kiện giá trị đơn hàng)
+     * Kiểm tra voucher có được áp dụng được không (bỏ qua điều kiện giá trị đơn
+     * hàng)
      */
     public boolean isValid() {
-        if (!trangThai) return false;
+        if (!trangThai)
+            return false;
         LocalDateTime now = LocalDateTime.now();
-        if (now.isBefore(ngayBatDau) || now.isAfter(ngayKetThuc)) return false;
-        if (soLuongToiDa != null && soLuongSuDung >= soLuongToiDa) return false;
+        if (now.isBefore(ngayBatDau) || now.isAfter(ngayKetThuc))
+            return false;
+        if (soLuongToiDa != null && soLuongSuDung >= soLuongToiDa)
+            return false;
         return true;
     }
 
@@ -87,7 +96,8 @@ public class Voucher {
      * Tính tiền giảm dựa vào giá trị đơn hàng
      */
     public BigDecimal tinhGiaTriGiam(BigDecimal giaTriDonHang) {
-        if (!isValid()) return BigDecimal.ZERO;
+        if (!isValid())
+            return BigDecimal.ZERO;
         if (giaTriToiThieu != null && giaTriDonHang.compareTo(giaTriToiThieu) < 0) {
             return BigDecimal.ZERO; // Không đủ giá trị tối thiểu
         }

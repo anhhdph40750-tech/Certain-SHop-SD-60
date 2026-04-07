@@ -41,7 +41,7 @@ public class QuanLyThuocTinhApiController {
 
     @PutMapping("/mau-sac/{id}")
     public ResponseEntity<ApiResponse<MauSac>> capNhatMauSac(
-            @PathVariable Long id, @RequestBody Map<String, String> body) {
+            @PathVariable("id") Long id, @RequestBody Map<String, String> body) {
         return mauSacRepository.findById(id).map(ms -> {
             if (body.get("tenMau") != null) ms.setTenMau(body.get("tenMau"));
             if (body.get("maHex") != null) ms.setMaHex(body.get("maHex"));
@@ -51,7 +51,7 @@ public class QuanLyThuocTinhApiController {
     }
 
     @DeleteMapping("/mau-sac/{id}")
-    public ResponseEntity<ApiResponse<Void>> xoaMauSac(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> xoaMauSac(@PathVariable("id") Long id) {
         try {
             mauSacRepository.deleteById(id);
             return ResponseEntity.ok(ApiResponse.ok("Xóa thành công", null));
@@ -77,7 +77,7 @@ public class QuanLyThuocTinhApiController {
 
     @PutMapping("/kich-thuoc/{id}")
     public ResponseEntity<ApiResponse<KichThuoc>> capNhatKichThuoc(
-            @PathVariable Long id, @RequestBody Map<String, Object> body) {
+            @PathVariable("id") Long id, @RequestBody Map<String, Object> body) {
         return kichThuocRepository.findById(id).map(kt -> {
             if (body.get("kichCo") != null) kt.setKichCo((String) body.get("kichCo"));
             if (body.get("thuTu") instanceof Integer i) kt.setThuTu(i);
@@ -86,7 +86,7 @@ public class QuanLyThuocTinhApiController {
     }
 
     @DeleteMapping("/kich-thuoc/{id}")
-    public ResponseEntity<ApiResponse<Void>> xoaKichThuoc(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> xoaKichThuoc(@PathVariable("id") Long id) {
         try {
             kichThuocRepository.deleteById(id);
             return ResponseEntity.ok(ApiResponse.ok("Xóa thành công", null));
@@ -112,7 +112,7 @@ public class QuanLyThuocTinhApiController {
 
     @PutMapping("/chat-lieu/{id}")
     public ResponseEntity<ApiResponse<ChatLieu>> capNhatChatLieu(
-            @PathVariable Long id, @RequestBody Map<String, String> body) {
+            @PathVariable("id") Long id, @RequestBody Map<String, String> body) {
         return chatLieuRepository.findById(id).map(cl -> {
             if (body.get("tenChatLieu") != null) cl.setTenChatLieu(body.get("tenChatLieu"));
             if (body.get("moTa") != null) cl.setMoTa(body.get("moTa"));
@@ -121,7 +121,7 @@ public class QuanLyThuocTinhApiController {
     }
 
     @DeleteMapping("/chat-lieu/{id}")
-    public ResponseEntity<ApiResponse<Void>> xoaChatLieu(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> xoaChatLieu(@PathVariable("id") Long id) {
         try {
             chatLieuRepository.deleteById(id);
             return ResponseEntity.ok(ApiResponse.ok("Xóa thành công", null));
@@ -148,7 +148,7 @@ public class QuanLyThuocTinhApiController {
 
     @PutMapping("/danh-muc/{id}")
     public ResponseEntity<ApiResponse<DanhMuc>> capNhatDanhMuc(
-            @PathVariable Long id, @RequestBody DanhMuc body) {
+            @PathVariable("id") Long id, @RequestBody DanhMuc body) {
         return danhMucRepository.findById(id).map(dm -> {
             if (body.getTenDanhMuc() != null) dm.setTenDanhMuc(body.getTenDanhMuc());
             if (body.getDuongDan() != null) dm.setDuongDan(body.getDuongDan());
@@ -160,7 +160,7 @@ public class QuanLyThuocTinhApiController {
     }
 
     @DeleteMapping("/danh-muc/{id}")
-    public ResponseEntity<ApiResponse<Void>> xoaDanhMuc(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> xoaDanhMuc(@PathVariable("id") Long id) {
         try {
             danhMucRepository.deleteById(id);
             return ResponseEntity.ok(ApiResponse.ok("Xóa thành công", null));
@@ -187,7 +187,7 @@ public class QuanLyThuocTinhApiController {
 
     @PutMapping("/thuong-hieu/{id}")
     public ResponseEntity<ApiResponse<ThuongHieu>> capNhatThuongHieu(
-            @PathVariable Long id, @RequestBody ThuongHieu body) {
+            @PathVariable("id") Long id, @RequestBody ThuongHieu body) {
         return thuongHieuRepository.findById(id).map(th -> {
             if (body.getTenThuongHieu() != null) th.setTenThuongHieu(body.getTenThuongHieu());
             if (body.getMoTa() != null) th.setMoTa(body.getMoTa());
@@ -197,7 +197,7 @@ public class QuanLyThuocTinhApiController {
     }
 
     @DeleteMapping("/thuong-hieu/{id}")
-    public ResponseEntity<ApiResponse<Void>> xoaThuongHieu(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> xoaThuongHieu(@PathVariable("id") Long id) {
         try {
             thuongHieuRepository.deleteById(id);
             return ResponseEntity.ok(ApiResponse.ok("Xóa thành công", null));

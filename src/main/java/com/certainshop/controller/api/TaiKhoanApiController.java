@@ -129,7 +129,7 @@ public class TaiKhoanApiController {
     @PutMapping("/dia-chi/{id}")
     public ResponseEntity<ApiResponse<DiaChiNguoiDung>> capNhatDiaChi(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @RequestBody DiaChiNguoiDung diaChi) {
         NguoiDung nd = getNguoiDung(userDetails);
         try {
@@ -143,7 +143,7 @@ public class TaiKhoanApiController {
     @DeleteMapping("/dia-chi/{id}")
     public ResponseEntity<ApiResponse<Void>> xoaDiaChi(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long id) {
+            @PathVariable("id") Long id) {
         NguoiDung nd = getNguoiDung(userDetails);
         try {
             diaChiService.xoaDiaChi(id, nd.getId());
@@ -156,7 +156,7 @@ public class TaiKhoanApiController {
     @PutMapping("/dia-chi/{id}/mac-dinh")
     public ResponseEntity<ApiResponse<Void>> datLamMacDinh(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long id) {
+            @PathVariable("id") Long id) {
         NguoiDung nd = getNguoiDung(userDetails);
         try {
             diaChiService.datLamMacDinh(id, nd.getId());

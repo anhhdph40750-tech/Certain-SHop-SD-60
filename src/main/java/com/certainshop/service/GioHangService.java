@@ -20,7 +20,7 @@ public class GioHangService {
     private final GioHangChiTietRepository gioHangChiTietRepository;
     private final BienTheRepository bienTheRepository;
 
-    @Value("${app.sanpham.soLuongMuaToiDa:100}")
+    @Value("${app.sanpham.soLuongMuaToiDa:5}")
     private int soLuongMuaToiDa;
 
     /**
@@ -70,7 +70,7 @@ public class GioHangService {
             if (soLuongMoi > soLuongMuaToiDa) {
                 throw new IllegalArgumentException(
                         "Chỉ được mua tối đa " + soLuongMuaToiDa +
-                        " sản phẩm. Liên hệ " + "SĐT 0123456789 nếu cần mua số lượng lớn hơn.");
+                                " sản phẩm. Liên hệ " + "SĐT 0123456789 nếu cần mua số lượng lớn hơn.");
             }
 
             // Kiểm tra tồn kho

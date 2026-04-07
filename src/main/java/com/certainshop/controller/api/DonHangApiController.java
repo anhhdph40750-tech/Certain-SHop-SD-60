@@ -72,22 +72,38 @@ public class DonHangApiController {
 
     @GetMapping("/don-hang/cua-toi")
     public ResponseEntity<?> donHangCuaToi(
-            @RequestParam(defaultValue = "0") int trang,
-            @RequestParam(defaultValue = "10") int kichThuocTrang,
+            @RequestParam(value = "trang", defaultValue = "0") int trang,
+            @RequestParam(value = "kichThuocTrang", defaultValue = "10") int kichThuocTrang,
+            @RequestParam(value = "sortType", defaultValue = "desc") String sortType,
+            @RequestParam(value = "trangThai", required = false) String trangThai,
             Authentication auth) {
+
         NguoiDung nd = layNguoiDung(auth);
-        Pageable pageable = PageRequest.of(trang, kichThuocTrang);
-        Page<DonHang> page = donHangRepository.findByNguoiDungIdOrderByThoiGianTaoDesc(nd.getId(), pageable);
+
+        Sort sort = "asc".equalsIgnoreCase(sortType)
+                ? Sort.by("thoiGianTao").ascending()
+                : Sort.by("thoiGianTao").descending();
+
+        Pageable pageable = PageRequest.of(trang, kichThuocTrang, sort);
+
+        Page<DonHang> page;
+        if (trangThai == null || trangThai.trim().isEmpty()) {
+            page = donHangRepository.findByNguoiDungId(nd.getId(), pageable);
+        } else {
+            page = donHangRepository.findByNguoiDungIdAndTrangThaiDonHang(nd.getId(), trangThai, pageable);
+        }
+
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("danhSach", page.getContent().stream().map(this::toDonHangSummary).collect(Collectors.toList()));
         result.put("tongSoTrang", page.getTotalPages());
         result.put("tongSoBan", page.getTotalElements());
         result.put("trangHienTai", page.getNumber());
+
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
     @GetMapping("/don-hang/cua-toi/{maDonHang}")
-    public ResponseEntity<?> chiTietDonHangCuaToi(@PathVariable String maDonHang, Authentication auth) {
+    public ResponseEntity<?> chiTietDonHangCuaToi(@PathVariable("maDonHang") String maDonHang, Authentication auth) {
         NguoiDung nd = layNguoiDung(auth);
         return donHangRepository.findByMaDonHang(maDonHang)
                 .filter(dh -> dh.getNguoiDung() != null && dh.getNguoiDung().getId().equals(nd.getId()))
@@ -96,7 +112,7 @@ public class DonHangApiController {
     }
 
     @PostMapping("/don-hang/huy/{maDonHang}")
-    public ResponseEntity<?> huyDonHang(@PathVariable String maDonHang, Authentication auth) {
+    public ResponseEntity<?> huyDonHang(@PathVariable("maDonHang") String maDonHang, Authentication auth) {
         try {
             NguoiDung nd = layNguoiDung(auth);
             DonHang donHang = donHangRepository.findByMaDonHang(maDonHang)
@@ -104,8 +120,13 @@ public class DonHangApiController {
             if (donHang.getNguoiDung() == null || !donHang.getNguoiDung().getId().equals(nd.getId())) {
                 return ResponseEntity.status(403).body(ApiResponse.loi("Không có quyền hủy đơn hàng này"));
             }
-            if (!TrangThaiDonHang.CHO_XAC_NHAN.equals(donHang.getTrangThaiDonHang())) {
-                return ResponseEntity.badRequest().body(ApiResponse.loi("Chỉ có thể hủy đơn hàng đang chờ xác nhận"));
+            if (!(TrangThaiDonHang.CHO_XAC_NHAN.equals(donHang.getTrangThaiDonHang())
+                    || TrangThaiDonHang.DA_THANH_TOAN.equals(donHang.getTrangThaiDonHang())
+                    || TrangThaiDonHang.DA_XAC_NHAN.equals(donHang.getTrangThaiDonHang())
+                    || TrangThaiDonHang.DANG_XU_LY.equals(donHang.getTrangThaiDonHang()))) {
+
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.loi("Không thể hủy đơn hàng ở trạng thái này"));
             }
             donHangService.khachHuyDon(donHang.getId(), "Khách hàng tự hủy", nd.getId());
             return ResponseEntity.ok(ApiResponse.ok("Đã hủy đơn hàng thành công", null));
@@ -115,7 +136,7 @@ public class DonHangApiController {
     }
 
     @PostMapping("/don-hang/xac-nhan-nhan-hang/{maDonHang}")
-    public ResponseEntity<?> xacNhanNhanHang(@PathVariable String maDonHang, Authentication auth) {
+    public ResponseEntity<?> xacNhanNhanHang(@PathVariable("maDonHang") String maDonHang, Authentication auth) {
         try {
             NguoiDung nd = layNguoiDung(auth);
             DonHang donHang = donHangRepository.findByMaDonHang(maDonHang)
@@ -141,15 +162,23 @@ public class DonHangApiController {
             @RequestParam(defaultValue = "0") int trang,
             @RequestParam(defaultValue = "15") int kichThuocTrang,
             @RequestParam(required = false) String trangThai,
-            @RequestParam(required = false) String tuKhoa) {
-        Pageable pageable = PageRequest.of(trang, kichThuocTrang, Sort.by("thoiGianTao").descending());
+            @RequestParam(required = false) String tuKhoa,
+            @RequestParam(defaultValue = "desc") String sort) {
+
+        Sort sortObj = "asc".equalsIgnoreCase(sort)
+                ? Sort.by("thoiGianTao").ascending()
+                : Sort.by("thoiGianTao").descending();
+
+        Pageable pageable = PageRequest.of(trang, kichThuocTrang, sortObj);
+
         Page<DonHang> page = donHangRepository.findDonHangAdmin(trangThai, tuKhoa, pageable);
-        // NOTE: Removed ORDER BY from JPQL query to avoid duplication with Pageable sort
+
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("danhSach", page.getContent().stream().map(this::toDonHangSummary).collect(Collectors.toList()));
         result.put("tongSoTrang", page.getTotalPages());
         result.put("tongSoBan", page.getTotalElements());
         result.put("trangHienTai", page.getNumber());
+
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
@@ -168,14 +197,39 @@ public class DonHangApiController {
         try {
             String trangThaiMoi = body.get("trangThai");
             String ghiChu = body.getOrDefault("ghiChu", "");
+
             NguoiDung nd = layNguoiDung(auth);
+
             DonHang donHang = donHangRepository.findByMaDonHang(maDonHang)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
-            donHangService.chuyenTrangThai(donHang.getId(), trangThaiMoi, ghiChu, nd.getId());
+
+            if (TrangThaiDonHang.DA_HUY.equals(trangThaiMoi)) {
+                donHangService.nhanVienHuyDon(donHang.getId(), ghiChu, nd.getId());
+            } else {
+                donHangService.chuyenTrangThai(donHang.getId(), trangThaiMoi, ghiChu, nd.getId());
+            }
+
             return ResponseEntity.ok(ApiResponse.ok("Đã cập nhật trạng thái", null));
+
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.loi(e.getMessage()));
         }
+    }
+    @PostMapping("/lay-hang")
+    public ResponseEntity<?> layHang(@RequestParam String maDonHang) {
+
+        DonHang donHang = donHangRepository.findByMaDonHang(maDonHang)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn"));
+
+        if (!donHang.getTrangThaiDonHang().equals("DANG_XU_LY")) {
+            throw new RuntimeException("Đơn chưa sẵn sàng giao");
+        }
+
+        donHang.setTrangThaiDonHang("DANG_GIAO");
+
+        donHangRepository.save(donHang);
+
+        return ResponseEntity.ok("Đã chuyển sang ĐANG_GIAO");
     }
 
     @PostMapping("/khuyen-mai/kiem-tra")
@@ -287,7 +341,7 @@ public class DonHangApiController {
      * Frontend có thể gọi để verify thanh toán
      */
     @GetMapping("/payment-status/{maDonHang}")
-    public ResponseEntity<?> kiemTraTrangThaiThanhToan(@PathVariable String maDonHang) {
+    public ResponseEntity<?> kiemTraTrangThaiThanhToan(@PathVariable("maDonHang") String maDonHang) {
         try {
             Map<String, Object> trangThai = donHangService.layTrangThaiThanhToan(maDonHang);
             return ResponseEntity.ok(ApiResponse.ok("Trạng thái thanh toán", trangThai));
@@ -320,6 +374,29 @@ public class DonHangApiController {
         m.put("soMatHang", dh.getDanhSachChiTiet() != null ? dh.getDanhSachChiTiet().size() : 0);
         if (dh.getNguoiDung() != null) {
             m.put("nguoiDung", Map.of("id", dh.getNguoiDung().getId(), "tenDangNhap", dh.getNguoiDung().getTenDangNhap(), "hoTen", dh.getNguoiDung().getHoTen() != null ? dh.getNguoiDung().getHoTen() : ""));
+        }
+        if (dh.getDanhSachChiTiet() != null && !dh.getDanhSachChiTiet().isEmpty()) {
+            m.put("danhSachChiTiet", dh.getDanhSachChiTiet().stream().map(ct -> {
+                Map<String, Object> ctMap = new LinkedHashMap<>();
+                ctMap.put("id", ct.getId());
+                ctMap.put("soLuong", ct.getSoLuong());
+                ctMap.put("giaTaiThoiDiemMua", ct.getGiaTaiThoiDiemMua());
+                ctMap.put("thanhTien", ct.getThanhTien());
+                if (ct.getBienThe() != null) {
+                    var bt = ct.getBienThe();
+                    Map<String, Object> btMap = new LinkedHashMap<>();
+                    btMap.put("id", bt.getId());
+                    btMap.put("anhChinh", bt.getAnhChinh());
+                    if (bt.getSanPham() != null) {
+                        btMap.put("tenSanPham", bt.getSanPham().getTenSanPham());
+                        btMap.put("duongDanSanPham", bt.getSanPham().getDuongDan());
+                    }
+                    if (bt.getKichThuoc() != null) btMap.put("kichThuoc", bt.getKichThuoc().getKichCo());
+                    if (bt.getMauSac() != null) btMap.put("tenMauSac", bt.getMauSac().getTenMau());
+                    ctMap.put("bienThe", btMap);
+                }
+                return ctMap;
+            }).collect(Collectors.toList()));
         }
         return m;
     }

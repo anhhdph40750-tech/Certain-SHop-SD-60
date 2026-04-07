@@ -7,7 +7,11 @@ import java.math.BigDecimal;
 /**
  * DTO biến thể sản phẩm
  */
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class BienTheDto {
 
     private Long id;

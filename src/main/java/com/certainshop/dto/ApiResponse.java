@@ -2,7 +2,11 @@ package com.certainshop.dto;
 
 import lombok.*;
 
-@Getter @Setter @AllArgsConstructor @NoArgsConstructor @Builder
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class ApiResponse<T> {
     private boolean thanhCong;
     private String thongBao;

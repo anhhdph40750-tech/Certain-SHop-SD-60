@@ -9,7 +9,11 @@ import java.util.List;
 
 @Entity
 @Table(name = "BienThe")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class BienThe {
 
     @Id
@@ -67,11 +71,12 @@ public class BienThe {
 
     // Lấy ảnh chính
     public String getAnhChinh() {
-        if (danhSachHinhAnh == null || danhSachHinhAnh.isEmpty()) return "/img/no-image.png";
-        return danhSachHinhAnh.stream()
-                .filter(HinhAnhBienThe::getLaAnhChinh)
-                .map(HinhAnhBienThe::getDuongDan)
-                .findFirst()
-                .orElse(danhSachHinhAnh.get(0).getDuongDan());
+        if (danhSachHinhAnh == null || danhSachHinhAnh.isEmpty())
+            return "/img/no-image.png";
+        for (HinhAnhBienThe h : danhSachHinhAnh) {
+            if (Boolean.TRUE.equals(h.getLaAnhChinh()))
+                return h.getDuongDan();
+        }
+        return danhSachHinhAnh.get(0).getDuongDan();
     }
 }

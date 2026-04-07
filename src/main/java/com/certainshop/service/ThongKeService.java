@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -78,9 +79,30 @@ public class ThongKeService {
      * Sản phẩm bán chạy trong 1 tháng gần nhất
      */
     public List<Object[]> sanPhamBanChay() {
-        LocalDateTime tuNgay = LocalDateTime.now().minusMonths(1);
-        return chiTietDonHangRepository.thongKeSanPhamBanChay(tuNgay);
+        LocalDateTime tuNgay = LocalDate.now()
+                .withDayOfMonth(1)
+                .atStartOfDay();
+
+        LocalDateTime denNgay = tuNgay.plusMonths(1);
+
+        return chiTietDonHangRepository.thongKeSanPhamBanChay(tuNgay, denNgay);
     }
+
+
+//    public List<Object[]> sanPhamBanChay() {
+//
+//        LocalDateTime tuNgay = LocalDate.now()
+//                .withDayOfMonth(1)
+//                .minusMonths(2)   // lùi 2 tháng
+//                .atStartOfDay();
+//
+//        LocalDateTime denNgay = LocalDate.now()
+//                .withDayOfMonth(1)
+//                .plusMonths(1)    // đầu tháng sau
+//                .atStartOfDay();
+//
+//        return chiTietDonHangRepository.thongKeSanPhamBanChay(tuNgay, denNgay);
+//    }
 
     /**
      * Tổng doanh thu

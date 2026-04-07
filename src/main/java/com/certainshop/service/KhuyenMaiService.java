@@ -123,6 +123,9 @@ public class KhuyenMaiService {
                 && km.getNgayKetThuc().isBefore(km.getNgayBatDau())) {
             throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu");
         }
+        if (km.getNgayKetThuc() != null && km.getNgayKetThuc().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Ngày kết thúc không được ở quá khứ");
+        }
         if ("PERCENT".equals(km.getLoaiGiamGia())) {
             if (km.getGiaTriGiam().compareTo(BigDecimal.valueOf(100)) > 0) {
                 throw new IllegalArgumentException("Phần trăm giảm không được vượt quá 100%");

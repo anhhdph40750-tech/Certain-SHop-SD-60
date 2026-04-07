@@ -8,7 +8,11 @@ import java.util.List;
 
 @Entity
 @Table(name = "NguoiDung")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class NguoiDung {
 
     @Id
@@ -30,6 +34,12 @@ public class NguoiDung {
 
     @Column(name = "SoDienThoai", length = 20)
     private String soDienThoai;
+
+    @Column(name = "CCCD", length = 20)
+    private String cccd;
+
+    @Column(name = "MaNguoiDung", length = 20)
+    private String maNguoiDung;
 
     @Column(name = "NgaySinh")
     private LocalDate ngaySinh;
@@ -72,7 +82,8 @@ public class NguoiDung {
     protected void truocKhiTao() {
         thoiGianTao = LocalDateTime.now();
         dangHoatDong = true;
-        if (trangThai == null) trangThai = "HOAT_DONG";
+        if (trangThai == null)
+            trangThai = "HOAT_DONG";
     }
 
     @PreUpdate

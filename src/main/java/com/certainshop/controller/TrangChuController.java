@@ -27,7 +27,7 @@ public class TrangChuController {
     private final GioHangService gioHangService;
     private final NguoiDungHienTai nguoiDungHienTai;
 
-    @GetMapping({"/", "/trang-chu"})
+    @GetMapping({ "/", "/trang-chu" })
     public String trangChu(Model model) {
         // Sản phẩm mới - áo phông (trang 1, 8 sản phẩm)
         Pageable trang = PageRequest.of(0, 8);

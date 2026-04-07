@@ -6,7 +6,11 @@ import lombok.*;
 /**
  * DTO đặt hàng online
  */
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class DatHangDto {
 
     // ID địa chỉ đã lưu (nếu chọn từ danh sách)
@@ -36,6 +40,9 @@ public class DatHangDto {
     private String phuongThucThanhToan; // COD hoặc VNPAY
 
     private Long khuyenMaiId;
+
+    // Mã voucher (hệ thống Voucher mới hoặc KhuyenMai cũ) gửi từ FE
+    private String maVoucher;
 
     private String ghiChu;
 
