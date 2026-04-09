@@ -114,8 +114,8 @@ public class ThongKeService {
     /**
      * Thống kê số hóa đơn hoàn tất theo ngày trong khoảng thời gian
      */
-    public List<Object[]> demHoaDonHoanTatTheoNgay(LocalDateTime tuNgay, LocalDateTime denNgay) {
-        return donHangRepository.demHoaDonHoanTatTheoNgay(tuNgay, denNgay);
+    public List<Object[]> demDonTheoTrangThaiTheoNgay(LocalDateTime tuNgay, LocalDateTime denNgay) {
+        return donHangRepository.demDonTheoTrangThaiTheoNgay(tuNgay, denNgay);
     }
 
     /**

@@ -135,14 +135,13 @@ public interface DonHangRepository extends JpaRepository<DonHang, Long> {
             @Param("denNgay") LocalDateTime denNgay);
 
     // Đếm số hóa đơn hoàn tất theo từng ngày
-    @Query(value = "SELECT CAST(ThoiGianTao AS DATE) AS ngay, COUNT(*) AS soLuong " +
+    @Query(value = "SELECT CAST(ThoiGianTao AS DATE) AS ngay, TrangThaiDonHang, COUNT(*) AS soLuong " +
             "FROM DonHang " +
-            "WHERE TrangThaiDonHang <> 'DA_HUY' " +
-            "AND ThoiGianTao BETWEEN :tuNgay AND :denNgay " +
-            "GROUP BY CAST(ThoiGianTao AS DATE) " +
+            "WHERE ThoiGianTao BETWEEN :tuNgay AND :denNgay " +
+            "GROUP BY CAST(ThoiGianTao AS DATE), TrangThaiDonHang " +
             "ORDER BY CAST(ThoiGianTao AS DATE) ASC",
             nativeQuery = true)
-    List<Object[]> demHoaDonHoanTatTheoNgay(
+    List<Object[]> demDonTheoTrangThaiTheoNgay(
             @Param("tuNgay") LocalDateTime tuNgay,
             @Param("denNgay") LocalDateTime denNgay);
 

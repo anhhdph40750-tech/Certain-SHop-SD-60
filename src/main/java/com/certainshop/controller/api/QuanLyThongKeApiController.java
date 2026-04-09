@@ -48,28 +48,23 @@ public class QuanLyThongKeApiController {
         }
     }
 
-    @GetMapping("/don-hoan-tat")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> hoaDonHoanTatTheoNgay(
+    @GetMapping("/don-trang-thai-theo-ngay")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> donTrangThaiTheoNgay(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime tuNgay,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime denNgay) {
-        try {
-            // Lấy chi tiết số hóa đơn hoàn tất theo ngày
-            List<Object[]> chiTiet = thongKeService.demHoaDonHoanTatTheoNgay(tuNgay, denNgay);
 
-            // Tổng số hóa đơn hoàn tất trong khoảng
-            long tongHoaDon = chiTiet.stream()
-                    .mapToLong(row -> ((Number) row[1]).longValue())
-                    .sum();
+        List<Object[]> chiTiet = thongKeService.demDonTheoTrangThaiTheoNgay(tuNgay, denNgay);
 
-            Map<String, Object> data = Map.of(
-                    "chiTiet", chiTiet,
-                    "tongHoaDon", tongHoaDon
-            );
+        // Chuyển thành list Map {ngay, trangThai, soLuong}
+        List<Map<String, Object>> data = chiTiet.stream()
+                .map(r -> Map.of(
+                        "ngay", r[0],
+                        "trangThai", r[1],
+                        "soLuong", r[2]
+                ))
+                .toList();
 
-            return ResponseEntity.ok(ApiResponse.ok(data));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.loi(e.getMessage()));
-        }
+        return ResponseEntity.ok(ApiResponse.ok(data));
     }
 
     @GetMapping("/san-pham-ban-chay")

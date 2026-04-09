@@ -375,6 +375,7 @@ public class DonHangApiController {
         m.put("tongTienThanhToan", dh.getTongTienThanhToan());
         m.put("phuongThucThanhToan", dh.getPhuongThucThanhToan());
         m.put("daThanhToan", dh.getDaThanhToan());
+        m.put("ghiChu", dh.getGhiChu());
         m.put("tenNguoiNhan", dh.getTenNguoiNhan());
         m.put("sdtNguoiNhan", dh.getSdtNguoiNhan());
         m.put("diaChiGiaoHang", dh.getDiaChiGiaoHang());
