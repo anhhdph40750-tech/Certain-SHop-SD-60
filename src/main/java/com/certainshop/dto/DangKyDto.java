@@ -36,4 +36,116 @@ public class DangKyDto {
     private LocalDate ngaySinh;
 
     private String gioiTinh;
+
+    /**
+     * @return the tenDangNhap
+     */
+    public String getTenDangNhap() {
+        return tenDangNhap;
+    }
+
+    /**
+     * @param tenDangNhap the tenDangNhap to set
+     */
+    public void setTenDangNhap(String tenDangNhap) {
+        this.tenDangNhap = tenDangNhap;
+    }
+
+    /**
+     * @return the email
+     */
+    public String getEmail() {
+        return email;
+    }
+
+    /**
+     * @param email the email to set
+     */
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    /**
+     * @return the matKhau
+     */
+    public String getMatKhau() {
+        return matKhau;
+    }
+
+    /**
+     * @param matKhau the matKhau to set
+     */
+    public void setMatKhau(String matKhau) {
+        this.matKhau = matKhau;
+    }
+
+    /**
+     * @return the xacNhanMatKhau
+     */
+    public String getXacNhanMatKhau() {
+        return xacNhanMatKhau;
+    }
+
+    /**
+     * @param xacNhanMatKhau the xacNhanMatKhau to set
+     */
+    public void setXacNhanMatKhau(String xacNhanMatKhau) {
+        this.xacNhanMatKhau = xacNhanMatKhau;
+    }
+
+    /**
+     * @return the hoTen
+     */
+    public String getHoTen() {
+        return hoTen;
+    }
+
+    /**
+     * @param hoTen the hoTen to set
+     */
+    public void setHoTen(String hoTen) {
+        this.hoTen = hoTen;
+    }
+
+    /**
+     * @return the soDienThoai
+     */
+    public String getSoDienThoai() {
+        return soDienThoai;
+    }
+
+    /**
+     * @param soDienThoai the soDienThoai to set
+     */
+    public void setSoDienThoai(String soDienThoai) {
+        this.soDienThoai = soDienThoai;
+    }
+
+    /**
+     * @return the ngaySinh
+     */
+    public LocalDate getNgaySinh() {
+        return ngaySinh;
+    }
+
+    /**
+     * @param ngaySinh the ngaySinh to set
+     */
+    public void setNgaySinh(LocalDate ngaySinh) {
+        this.ngaySinh = ngaySinh;
+    }
+
+    /**
+     * @return the gioiTinh
+     */
+    public String getGioiTinh() {
+        return gioiTinh;
+    }
+
+    /**
+     * @param gioiTinh the gioiTinh to set
+     */
+    public void setGioiTinh(String gioiTinh) {
+        this.gioiTinh = gioiTinh;
+    }
 }

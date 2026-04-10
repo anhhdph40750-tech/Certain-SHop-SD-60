@@ -28,6 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/api")
@@ -35,11 +36,19 @@ import java.util.stream.Collectors;
 @Slf4j
 public class DonHangApiController {
 
-    private final DonHangService donHangService;
-    private final DonHangRepository donHangRepository;
-    private final NguoiDungRepository nguoiDungRepository;
-    private final KhuyenMaiService khuyenMaiService;
-    private final VNPayUtil vnPayUtil;
+    @Autowired
+    private DonHangService donHangService;
+    @Autowired
+    private DonHangRepository donHangRepository;
+    @Autowired
+    private NguoiDungRepository nguoiDungRepository;
+    @Autowired
+    private KhuyenMaiService khuyenMaiService;
+    @Autowired
+    private VNPayUtil vnPayUtil;
+    
+    private static final org.slf4j.Logger log =
+        org.slf4j.LoggerFactory.getLogger(DonHangService.class);
 
     // === KHÁCH HÀNG ===
 

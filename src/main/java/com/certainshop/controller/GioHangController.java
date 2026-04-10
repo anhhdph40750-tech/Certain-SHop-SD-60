@@ -13,14 +13,17 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Map;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/gio-hang")
 public class GioHangController {
 
-    private final GioHangService gioHangService;
-    private final NguoiDungHienTai nguoiDungHienTai;
+    @Autowired
+    private GioHangService gioHangService;
+    @Autowired
+    private NguoiDungHienTai nguoiDungHienTai;
 
     @GetMapping
     public String hienThiGioHang(Model model) {

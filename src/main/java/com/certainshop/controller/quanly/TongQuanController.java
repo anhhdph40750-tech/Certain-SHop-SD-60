@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Controller
 @RequestMapping("/quan-ly")
@@ -18,7 +19,8 @@ import java.util.Map;
 @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN')")
 public class TongQuanController {
 
-    private final ThongKeService thongKeService;
+    @Autowired
+    private ThongKeService thongKeService;
 
     @GetMapping({"/", "/tong-quan"})
     public String tongQuan(Model model) {

@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/api/dia-chi")
@@ -24,14 +25,20 @@ import java.util.Optional;
 @Slf4j
 public class DiaChiApiController {
 
-    private final GHNApiService ghnApiService;
-    private final DiaChiService diaChiService;
-    private final NguoiDungService nguoiDungService;
+    @Autowired
+    private GHNApiService ghnApiService;
+    @Autowired
+    private DiaChiService diaChiService;
+    @Autowired
+    private NguoiDungService nguoiDungService;
 
     private NguoiDung getNguoiDung(UserDetails userDetails) {
         return nguoiDungService.timTheoTenDangNhap(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
     }
+    
+    private static final org.slf4j.Logger log =
+        org.slf4j.LoggerFactory.getLogger(DiaChiService.class);
 
     // ===== API GHN =====
 

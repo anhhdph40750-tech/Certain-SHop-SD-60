@@ -40,23 +40,121 @@ public class GioHangChiTiet {
 
     @PrePersist
     protected void truocKhiTao() {
-        thoiGianTao = LocalDateTime.now();
+        setThoiGianTao(LocalDateTime.now());
     }
 
     @PreUpdate
     protected void truocKhiCapNhat() {
-        thoiGianCapNhat = LocalDateTime.now();
+        setThoiGianCapNhat(LocalDateTime.now());
     }
 
     public BigDecimal getThanhTien() {
-        BigDecimal gia = donGia;
+        BigDecimal gia = getDonGia();
         // Fallback to BienThe.gia if donGia is null or zero
-        if ((gia == null || gia.signum() == 0) && bienThe != null) {
-            gia = bienThe.getGia();
+        if ((gia == null || gia.signum() == 0) && getBienThe() != null) {
+            gia = getBienThe().getGia();
         }
-        if (gia != null && soLuong != null) {
-            return gia.multiply(BigDecimal.valueOf(soLuong));
+        if (gia != null && getSoLuong() != null) {
+            return gia.multiply(BigDecimal.valueOf(getSoLuong()));
         }
         return BigDecimal.ZERO;
+    }
+
+    /**
+     * @return the id
+     */
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    /**
+     * @return the gioHang
+     */
+    public GioHang getGioHang() {
+        return gioHang;
+    }
+
+    /**
+     * @param gioHang the gioHang to set
+     */
+    public void setGioHang(GioHang gioHang) {
+        this.gioHang = gioHang;
+    }
+
+    /**
+     * @return the bienThe
+     */
+    public BienThe getBienThe() {
+        return bienThe;
+    }
+
+    /**
+     * @param bienThe the bienThe to set
+     */
+    public void setBienThe(BienThe bienThe) {
+        this.bienThe = bienThe;
+    }
+
+    /**
+     * @return the soLuong
+     */
+    public Integer getSoLuong() {
+        return soLuong;
+    }
+
+    /**
+     * @param soLuong the soLuong to set
+     */
+    public void setSoLuong(Integer soLuong) {
+        this.soLuong = soLuong;
+    }
+
+    /**
+     * @return the donGia
+     */
+    public BigDecimal getDonGia() {
+        return donGia;
+    }
+
+    /**
+     * @param donGia the donGia to set
+     */
+    public void setDonGia(BigDecimal donGia) {
+        this.donGia = donGia;
+    }
+
+    /**
+     * @return the thoiGianTao
+     */
+    public LocalDateTime getThoiGianTao() {
+        return thoiGianTao;
+    }
+
+    /**
+     * @param thoiGianTao the thoiGianTao to set
+     */
+    public void setThoiGianTao(LocalDateTime thoiGianTao) {
+        this.thoiGianTao = thoiGianTao;
+    }
+
+    /**
+     * @return the thoiGianCapNhat
+     */
+    public LocalDateTime getThoiGianCapNhat() {
+        return thoiGianCapNhat;
+    }
+
+    /**
+     * @param thoiGianCapNhat the thoiGianCapNhat to set
+     */
+    public void setThoiGianCapNhat(LocalDateTime thoiGianCapNhat) {
+        this.thoiGianCapNhat = thoiGianCapNhat;
     }
 }

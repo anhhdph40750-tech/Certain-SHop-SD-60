@@ -1,6 +1,8 @@
 package com.certainshop.controller;
 
 import com.certainshop.entity.*;
+import com.certainshop.repository.DanhMucRepository;
+import com.certainshop.repository.ThuongHieuRepository;
 import com.certainshop.service.*;
 import com.certainshop.util.NguoiDungHienTai;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Controller trang chủ và hiển thị sản phẩm cho khách
@@ -20,12 +23,17 @@ import java.util.Optional;
 @Controller
 @RequiredArgsConstructor
 public class TrangChuController {
-
-    private final SanPhamService sanPhamService;
-    private final com.certainshop.repository.DanhMucRepository dmRepo;
-    private final com.certainshop.repository.ThuongHieuRepository thuongHieuRepo;
-    private final GioHangService gioHangService;
-    private final NguoiDungHienTai nguoiDungHienTai;
+    
+    @Autowired
+    private  SanPhamService sanPhamService;
+    @Autowired
+    private  DanhMucRepository dmRepo;
+    @Autowired
+    private  ThuongHieuRepository thuongHieuRepo;
+    @Autowired
+    private  GioHangService gioHangService;
+    @Autowired
+    private  NguoiDungHienTai nguoiDungHienTai;
 
     @GetMapping({ "/", "/trang-chu" })
     public String trangChu(Model model) {

@@ -21,15 +21,19 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
 public class SanPhamApiController {
 
-    private final SanPhamService sanPhamService;
-    private final DanhMucRepository danhMucRepository;
-    private final ThuongHieuRepository thuongHieuRepository;
+    @Autowired
+    private SanPhamService sanPhamService;
+    @Autowired
+    private DanhMucRepository danhMucRepository;
+    @Autowired
+    private ThuongHieuRepository thuongHieuRepository;
 
     // ===== SẢN PHẨM =====
 
@@ -163,6 +167,15 @@ public class SanPhamApiController {
                     .map(bt -> bt.getGia())
                     .orElse(giaBan);
         }
+        // Tính tổng số lượng tồn
+        int tongSoLuong = 0;
+        if (sp.getDanhSachBienThe() != null) {
+            tongSoLuong = sp.getDanhSachBienThe().stream()
+                    .filter(bt -> Boolean.TRUE.equals(bt.getTrangThai()))
+                    .mapToInt(bt -> bt.getSoLuongTon() != null ? bt.getSoLuongTon() : 0)
+                    .sum();
+        }
+        m.put("soLuong", tongSoLuong);
         m.put("giaBan", giaBan);
 
         if (sp.getDanhMuc() != null) {

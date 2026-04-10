@@ -9,13 +9,15 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/api/ghn")
 @RequiredArgsConstructor
 public class GHNApiController {
 
-    private final GHNApiService ghnService;
+    @Autowired
+    private GHNApiService ghnService;
 
     /**
      * Tính phí vận chuyển GHN - Public endpoint

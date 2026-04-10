@@ -13,7 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -25,17 +25,28 @@ import java.util.*;
 @Transactional
 public class DonHangService {
 
-    private final DonHangRepository donHangRepository;
-    private final ChiTietDonHangRepository chiTietDonHangRepository;
-    private final BienTheRepository bienTheRepository;
-    private final NguoiDungRepository nguoiDungRepository;
-    private final LichSuTrangThaiDonRepository lichSuRepository;
-    private final GioHangRepository gioHangRepository;
-    private final GioHangChiTietRepository gioHangChiTietRepository;
-    private final KhuyenMaiService khuyenMaiService;
-    private final VoucherService voucherService;
-    private final DiaChiNguoiDungRepository diaChiRepository;
-    private final MailService mailService;
+    @Autowired
+    private DonHangRepository donHangRepository;
+    @Autowired
+    private ChiTietDonHangRepository chiTietDonHangRepository;
+    @Autowired
+    private BienTheRepository bienTheRepository;
+    @Autowired
+    private NguoiDungRepository nguoiDungRepository;
+    @Autowired
+    private LichSuTrangThaiDonRepository lichSuRepository;
+    @Autowired
+    private GioHangRepository gioHangRepository;
+    @Autowired
+    private GioHangChiTietRepository gioHangChiTietRepository;
+    @Autowired
+    private KhuyenMaiService khuyenMaiService;
+    @Autowired
+    private VoucherService voucherService;
+    @Autowired
+    private DiaChiNguoiDungRepository diaChiRepository;
+    @Autowired
+    private MailService mailService;
 
     @Value("${app.hoadon.soLuongChoToiDa:5}")
     private int soLuongHoaDonChoToiDa;
@@ -475,6 +486,7 @@ public class DonHangService {
         }
 
         DonHang donHang = DonHang.builder()
+                
                 .maDonHang(sinhMaDonHang())
                 .trangThaiDonHang(TrangThaiDonHang.HOA_DON_CHO)
                 .loaiDonHang("TAI_QUAY")

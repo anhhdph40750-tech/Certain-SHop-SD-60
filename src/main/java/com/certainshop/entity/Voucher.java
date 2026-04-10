@@ -66,15 +66,15 @@ public class Voucher {
     @PrePersist
     protected void onCreate() {
         LocalDateTime now = LocalDateTime.now();
-        thoiGianTao = now;
-        thoiGianCapNhat = now; // Set on creation too, not just on update
-        if (trangThai == null)
-            trangThai = true;
+        setThoiGianTao(now);
+        setThoiGianCapNhat(now); // Set on creation too, not just on update
+        if (getTrangThai() == null)
+            setTrangThai((Boolean) true);
     }
 
     @PreUpdate
     protected void onUpdate() {
-        thoiGianCapNhat = LocalDateTime.now();
+        setThoiGianCapNhat(LocalDateTime.now());
     }
 
     /**
@@ -82,12 +82,12 @@ public class Voucher {
      * hàng)
      */
     public boolean isValid() {
-        if (!trangThai)
+        if (!getTrangThai())
             return false;
         LocalDateTime now = LocalDateTime.now();
-        if (now.isBefore(ngayBatDau) || now.isAfter(ngayKetThuc))
+        if (now.isBefore(getNgayBatDau()) || now.isAfter(getNgayKetThuc()))
             return false;
-        if (soLuongToiDa != null && soLuongSuDung >= soLuongToiDa)
+        if (getSoLuongToiDa() != null && getSoLuongSuDung() >= getSoLuongToiDa())
             return false;
         return true;
     }
@@ -98,22 +98,223 @@ public class Voucher {
     public BigDecimal tinhGiaTriGiam(BigDecimal giaTriDonHang) {
         if (!isValid())
             return BigDecimal.ZERO;
-        if (giaTriToiThieu != null && giaTriDonHang.compareTo(giaTriToiThieu) < 0) {
+        if (getGiaTriToiThieu() != null && giaTriDonHang.compareTo(getGiaTriToiThieu()) < 0) {
             return BigDecimal.ZERO; // Không đủ giá trị tối thiểu
         }
 
         BigDecimal giaTriGiamThuc;
-        if ("PERCENT".equals(loaiGiam)) {
-            giaTriGiamThuc = giaTriDonHang.multiply(giaTriGiam).divide(new BigDecimal("100"));
+        if ("PERCENT".equals(getLoaiGiam())) {
+            giaTriGiamThuc = giaTriDonHang.multiply(getGiaTriGiam()).divide(new BigDecimal("100"));
         } else {
-            giaTriGiamThuc = giaTriGiam;
+            giaTriGiamThuc = getGiaTriGiam();
         }
 
-        // Không vượt quá giá trị giảm tối đa
-        if (giaTriGiamThuc.compareTo(giaTriGiamToiDa) > 0) {
-            giaTriGiamThuc = giaTriGiamToiDa;
+        // Không vượt quá giá trị giảm tối đa (nếu có)
+        if (getGiaTriGiamToiDa() != null && giaTriGiamThuc.compareTo(getGiaTriGiamToiDa()) > 0) {
+            giaTriGiamThuc = getGiaTriGiamToiDa();
+        }
+
+        // Không vượt quá tổng tiền sản phẩm (để phí ship không bị trừ)
+        if (giaTriGiamThuc.compareTo(giaTriDonHang) > 0) {
+            giaTriGiamThuc = giaTriDonHang;
         }
 
         return giaTriGiamThuc;
+    }
+
+    /**
+     * @return the id
+     */
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    /**
+     * @return the maVoucher
+     */
+    public String getMaVoucher() {
+        return maVoucher;
+    }
+
+    /**
+     * @param maVoucher the maVoucher to set
+     */
+    public void setMaVoucher(String maVoucher) {
+        this.maVoucher = maVoucher;
+    }
+
+    /**
+     * @return the moTa
+     */
+    public String getMoTa() {
+        return moTa;
+    }
+
+    /**
+     * @param moTa the moTa to set
+     */
+    public void setMoTa(String moTa) {
+        this.moTa = moTa;
+    }
+
+    /**
+     * @return the trangThai
+     */
+    public Boolean getTrangThai() {
+        return trangThai;
+    }
+
+    /**
+     * @param trangThai the trangThai to set
+     */
+    public void setTrangThai(Boolean trangThai) {
+        this.trangThai = trangThai;
+    }
+
+    /**
+     * @return the ngayBatDau
+     */
+    public LocalDateTime getNgayBatDau() {
+        return ngayBatDau;
+    }
+
+    /**
+     * @param ngayBatDau the ngayBatDau to set
+     */
+    public void setNgayBatDau(LocalDateTime ngayBatDau) {
+        this.ngayBatDau = ngayBatDau;
+    }
+
+    /**
+     * @return the ngayKetThuc
+     */
+    public LocalDateTime getNgayKetThuc() {
+        return ngayKetThuc;
+    }
+
+    /**
+     * @param ngayKetThuc the ngayKetThuc to set
+     */
+    public void setNgayKetThuc(LocalDateTime ngayKetThuc) {
+        this.ngayKetThuc = ngayKetThuc;
+    }
+
+    /**
+     * @return the giaTriToiThieu
+     */
+    public BigDecimal getGiaTriToiThieu() {
+        return giaTriToiThieu;
+    }
+
+    /**
+     * @param giaTriToiThieu the giaTriToiThieu to set
+     */
+    public void setGiaTriToiThieu(BigDecimal giaTriToiThieu) {
+        this.giaTriToiThieu = giaTriToiThieu;
+    }
+
+    /**
+     * @return the giaTriGiamToiDa
+     */
+    public BigDecimal getGiaTriGiamToiDa() {
+        return giaTriGiamToiDa;
+    }
+
+    /**
+     * @param giaTriGiamToiDa the giaTriGiamToiDa to set
+     */
+    public void setGiaTriGiamToiDa(BigDecimal giaTriGiamToiDa) {
+        this.giaTriGiamToiDa = giaTriGiamToiDa;
+    }
+
+    /**
+     * @return the loaiGiam
+     */
+    public String getLoaiGiam() {
+        return loaiGiam;
+    }
+
+    /**
+     * @param loaiGiam the loaiGiam to set
+     */
+    public void setLoaiGiam(String loaiGiam) {
+        this.loaiGiam = loaiGiam;
+    }
+
+    /**
+     * @return the giaTriGiam
+     */
+    public BigDecimal getGiaTriGiam() {
+        return giaTriGiam;
+    }
+
+    /**
+     * @param giaTriGiam the giaTriGiam to set
+     */
+    public void setGiaTriGiam(BigDecimal giaTriGiam) {
+        this.giaTriGiam = giaTriGiam;
+    }
+
+    /**
+     * @return the soLuongSuDung
+     */
+    public Integer getSoLuongSuDung() {
+        return soLuongSuDung;
+    }
+
+    /**
+     * @param soLuongSuDung the soLuongSuDung to set
+     */
+    public void setSoLuongSuDung(Integer soLuongSuDung) {
+        this.soLuongSuDung = soLuongSuDung;
+    }
+
+    /**
+     * @return the soLuongToiDa
+     */
+    public Integer getSoLuongToiDa() {
+        return soLuongToiDa;
+    }
+
+    /**
+     * @param soLuongToiDa the soLuongToiDa to set
+     */
+    public void setSoLuongToiDa(Integer soLuongToiDa) {
+        this.soLuongToiDa = soLuongToiDa;
+    }
+
+    /**
+     * @return the thoiGianTao
+     */
+    public LocalDateTime getThoiGianTao() {
+        return thoiGianTao;
+    }
+
+    /**
+     * @param thoiGianTao the thoiGianTao to set
+     */
+    public void setThoiGianTao(LocalDateTime thoiGianTao) {
+        this.thoiGianTao = thoiGianTao;
+    }
+
+    /**
+     * @return the thoiGianCapNhat
+     */
+    public LocalDateTime getThoiGianCapNhat() {
+        return thoiGianCapNhat;
+    }
+
+    /**
+     * @param thoiGianCapNhat the thoiGianCapNhat to set
+     */
+    public void setThoiGianCapNhat(LocalDateTime thoiGianCapNhat) {
+        this.thoiGianCapNhat = thoiGianCapNhat;
     }
 }

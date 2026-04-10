@@ -21,6 +21,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Controller
 @RequestMapping("/quan-ly/san-pham")
@@ -28,12 +29,18 @@ import java.util.Map;
 @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN')")
 public class SanPhamQLController {
 
-    private final SanPhamService sanPhamService;
-    private final DanhMucRepository danhMucRepository;
-    private final ThuongHieuRepository thuongHieuRepository;
-    private final KichThuocRepository kichThuocRepository;
-    private final MauSacRepository mauSacRepository;
-    private final ChatLieuRepository chatLieuRepository;
+    @Autowired
+    private  SanPhamService sanPhamService;
+    @Autowired
+    private  DanhMucRepository danhMucRepository;
+    @Autowired
+    private  ThuongHieuRepository thuongHieuRepository;
+    @Autowired
+    private  KichThuocRepository kichThuocRepository;
+    @Autowired
+    private  MauSacRepository mauSacRepository;
+    @Autowired
+    private  ChatLieuRepository chatLieuRepository;
 
     @Value("${app.upload.dir:uploads/images}")
     private String uploadDir;

@@ -4,6 +4,7 @@ import com.certainshop.entity.*;
 import com.certainshop.repository.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,11 +18,16 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN')")
 public class ThuocTinhQLController {
 
-    private final DanhMucRepository danhMucRepository;
-    private final ThuongHieuRepository thuongHieuRepository;
-    private final KichThuocRepository kichThuocRepository;
-    private final MauSacRepository mauSacRepository;
-    private final ChatLieuRepository chatLieuRepository;
+    @Autowired
+    private  DanhMucRepository danhMucRepository;
+    @Autowired
+    private  ThuongHieuRepository thuongHieuRepository;
+    @Autowired
+    private  KichThuocRepository kichThuocRepository;
+    @Autowired
+    private  MauSacRepository mauSacRepository;
+    @Autowired
+    private  ChatLieuRepository chatLieuRepository;
 
     // ===== DANH MỤC =====
 

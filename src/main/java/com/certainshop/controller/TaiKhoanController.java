@@ -16,15 +16,18 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Controller
 @RequestMapping("/tai-khoan")
 @RequiredArgsConstructor
 public class TaiKhoanController {
-
-    private final NguoiDungService nguoiDungService;
-    private final DiaChiService diaChiService;
-    private final NguoiDungHienTai nguoiDungHienTai;
+    @Autowired
+    private NguoiDungService nguoiDungService;
+    @Autowired
+    private DiaChiService diaChiService;
+    @Autowired
+    private NguoiDungHienTai nguoiDungHienTai;
 
     @Value("${app.upload.dir:uploads/images}")
     private String uploadDir;

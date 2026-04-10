@@ -17,17 +17,23 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthApiController {
 
-    private final AuthenticationManager authenticationManager;
-    private final UserDetailsService userDetailsService;
-    private final JwtUtil jwtUtil;
-    private final NguoiDungService nguoiDungService;
-    private final NguoiDungRepository nguoiDungRepository;
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    @Autowired
+    private UserDetailsService userDetailsService;
+    @Autowired
+    private JwtUtil jwtUtil;
+    @Autowired
+    private NguoiDungService nguoiDungService;
+    @Autowired
+    private NguoiDungRepository nguoiDungRepository;
 
     @PostMapping("/dang-nhap")
     public ResponseEntity<?> dangNhap(@RequestBody Map<String, String> request) {

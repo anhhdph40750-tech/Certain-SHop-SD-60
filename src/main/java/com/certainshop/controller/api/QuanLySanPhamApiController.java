@@ -24,14 +24,16 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import com.certainshop.util.ExcelHelper;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/api/quan-ly/san-pham")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN','NHAN_VIEN')")
+@PreAuthorize("hasAnyRole('ADMIN','NHAN_VIEN', 'SUPER_ADMIN')")
 public class QuanLySanPhamApiController {
 
-    private final SanPhamService sanPhamService;
+    @Autowired
+    private SanPhamService sanPhamService;
 
     @Value("${app.upload.dir:uploads/images}")
     private String uploadDir;
@@ -68,6 +70,7 @@ public class QuanLySanPhamApiController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<SanPham>> taoMoi(@RequestBody SanPhamDto dto) {
         try {
             SanPham sp = sanPhamService.taoSanPham(dto);
@@ -78,6 +81,7 @@ public class QuanLySanPhamApiController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<SanPham>> capNhat(
             @PathVariable("id") Long id, @RequestBody SanPhamDto dto) {
         try {
@@ -89,6 +93,7 @@ public class QuanLySanPhamApiController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> xoa(@PathVariable("id") Long id) {
         try {
             sanPhamService.xoaSanPham(id);
@@ -99,6 +104,7 @@ public class QuanLySanPhamApiController {
     }
 
     @PutMapping("/{id}/trang-thai")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<String>> toggleTrangThai(@PathVariable("id") Long id) {
         try {
             String trangThaiMoi = sanPhamService.toggleTrangThai(id);
@@ -111,7 +117,20 @@ public class QuanLySanPhamApiController {
 
     // ======================== BIẾN THỂ ========================
 
+    @GetMapping("/{sanPhamId}/bien-the")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'NHAN_VIEN')")
+    public ResponseEntity<ApiResponse<List<BienThe>>> layDanhSachBienTheAdmin(
+            @PathVariable("sanPhamId") Long sanPhamId) {
+        try {
+            List<BienThe> danhSach = sanPhamService.danhSachBienTheCuaSanPham(sanPhamId);
+            return ResponseEntity.ok(ApiResponse.ok("Thành công", danhSach));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.loi(e.getMessage()));
+        }
+    }
+
     @PostMapping("/{sanPhamId}/bien-the")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<BienThe>> taoBienThe(
             @PathVariable("sanPhamId") Long sanPhamId, @RequestBody BienTheDto dto) {
         try {
@@ -123,6 +142,7 @@ public class QuanLySanPhamApiController {
     }
 
     @PostMapping("/{sanPhamId}/bien-the/bulk")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<BienThe>>> taoBulkBienThe(
             @PathVariable("sanPhamId") Long sanPhamId, @RequestBody List<BienTheDto> danhSachBienThe) {
         try {
@@ -138,6 +158,7 @@ public class QuanLySanPhamApiController {
     }
 
     @PutMapping("/bien-the/{bienTheId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<BienThe>> capNhatBienThe(
             @PathVariable("bienTheId") Long bienTheId, @RequestBody BienTheDto dto) {
         try {
@@ -149,6 +170,7 @@ public class QuanLySanPhamApiController {
     }
 
     @DeleteMapping("/bien-the/{bienTheId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> xoaBienThe(@PathVariable("bienTheId") Long bienTheId) {
         try {
             sanPhamService.xoaBienThe(bienTheId);
@@ -161,6 +183,7 @@ public class QuanLySanPhamApiController {
     // ======================== ẢNH ========================
 
     @PostMapping("/bien-the/{bienTheId}/upload-anh")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<?> uploadAnh(
             @PathVariable("bienTheId") Long bienTheId,
             @RequestParam("file") MultipartFile file,
@@ -175,6 +198,7 @@ public class QuanLySanPhamApiController {
     }
 
     @DeleteMapping("/anh/{anhId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> xoaAnh(@PathVariable("anhId") Long anhId) {
         try {
             sanPhamService.xoaAnh(anhId);

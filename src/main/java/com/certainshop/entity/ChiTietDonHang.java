@@ -32,9 +32,79 @@ public class ChiTietDonHang {
 
     // ThanhTien computed: not stored in DB
     public java.math.BigDecimal getThanhTien() {
-        if (giaTaiThoiDiemMua != null && soLuong != null) {
-            return giaTaiThoiDiemMua.multiply(java.math.BigDecimal.valueOf(soLuong));
+        if (getGiaTaiThoiDiemMua() != null && getSoLuong() != null) {
+            return getGiaTaiThoiDiemMua().multiply(java.math.BigDecimal.valueOf(getSoLuong()));
         }
         return java.math.BigDecimal.ZERO;
+    }
+
+    /**
+     * @return the id
+     */
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    /**
+     * @return the donHang
+     */
+    public DonHang getDonHang() {
+        return donHang;
+    }
+
+    /**
+     * @param donHang the donHang to set
+     */
+    public void setDonHang(DonHang donHang) {
+        this.donHang = donHang;
+    }
+
+    /**
+     * @return the bienThe
+     */
+    public BienThe getBienThe() {
+        return bienThe;
+    }
+
+    /**
+     * @param bienThe the bienThe to set
+     */
+    public void setBienThe(BienThe bienThe) {
+        this.bienThe = bienThe;
+    }
+
+    /**
+     * @return the giaTaiThoiDiemMua
+     */
+    public BigDecimal getGiaTaiThoiDiemMua() {
+        return giaTaiThoiDiemMua;
+    }
+
+    /**
+     * @param giaTaiThoiDiemMua the giaTaiThoiDiemMua to set
+     */
+    public void setGiaTaiThoiDiemMua(BigDecimal giaTaiThoiDiemMua) {
+        this.giaTaiThoiDiemMua = giaTaiThoiDiemMua;
+    }
+
+    /**
+     * @return the soLuong
+     */
+    public Integer getSoLuong() {
+        return soLuong;
+    }
+
+    /**
+     * @param soLuong the soLuong to set
+     */
+    public void setSoLuong(Integer soLuong) {
+        this.soLuong = soLuong;
     }
 }

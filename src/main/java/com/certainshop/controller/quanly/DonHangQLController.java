@@ -17,16 +17,20 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Controller
 @RequestMapping("/quan-ly/don-hang")
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN')")
 public class DonHangQLController {
-
-    private final DonHangService donHangService;
-    private final DonHangRepository donHangRepository;
-    private final NguoiDungHienTai nguoiDungHienTai;
+    
+    @Autowired
+    private  DonHangService donHangService;
+    @Autowired
+    private  DonHangRepository donHangRepository;
+    @Autowired
+    private  NguoiDungHienTai nguoiDungHienTai;
 
     @GetMapping
     public String danhSach(

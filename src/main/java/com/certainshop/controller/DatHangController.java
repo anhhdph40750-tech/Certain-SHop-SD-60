@@ -16,19 +16,27 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.util.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Controller
 @RequestMapping("/dat-hang")
 @RequiredArgsConstructor
 public class DatHangController {
-
-    private final DonHangService donHangService;
-    private final GioHangService gioHangService;
-    private final KhuyenMaiService khuyenMaiService;
-    private final DiaChiService diaChiService;
-    private final GHNApiService ghnApiService;
-    private final NguoiDungHienTai nguoiDungHienTai;
-    private final VNPayUtil vnPayUtil;
+    
+    @Autowired
+    private DonHangService donHangService;
+    @Autowired
+    private GioHangService gioHangService;
+    @Autowired
+    private KhuyenMaiService khuyenMaiService;
+    @Autowired
+    private  DiaChiService diaChiService;
+    @Autowired
+    private GHNApiService ghnApiService;
+    @Autowired
+    private NguoiDungHienTai nguoiDungHienTai;
+    @Autowired
+    private  VNPayUtil vnPayUtil;
 
     @Value("${app.shop.soDienThoai:0123456789}")
     private String sdtShop;

@@ -10,18 +10,24 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/api/quan-ly/thuoc-tinh")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN','NHAN_VIEN')")
+@PreAuthorize("hasAnyRole('ADMIN','NHAN_VIEN', 'SUPER_ADMIN')")
 public class QuanLyThuocTinhApiController {
 
-    private final MauSacRepository mauSacRepository;
-    private final KichThuocRepository kichThuocRepository;
-    private final ChatLieuRepository chatLieuRepository;
-    private final DanhMucRepository danhMucRepository;
-    private final ThuongHieuRepository thuongHieuRepository;
+    @Autowired
+    private MauSacRepository mauSacRepository;
+    @Autowired
+    private KichThuocRepository kichThuocRepository;
+    @Autowired
+    private ChatLieuRepository chatLieuRepository;
+    @Autowired
+    private DanhMucRepository danhMucRepository;
+    @Autowired
+    private ThuongHieuRepository thuongHieuRepository;
 
     // ======================== MÀU SẮC ========================
 
@@ -31,6 +37,7 @@ public class QuanLyThuocTinhApiController {
     }
 
     @PostMapping("/mau-sac")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<MauSac>> themMauSac(@RequestBody Map<String, String> body) {
         MauSac mauSac = new MauSac();
         mauSac.setTenMau(body.get("tenMau"));
@@ -40,6 +47,7 @@ public class QuanLyThuocTinhApiController {
     }
 
     @PutMapping("/mau-sac/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<MauSac>> capNhatMauSac(
             @PathVariable("id") Long id, @RequestBody Map<String, String> body) {
         return mauSacRepository.findById(id).map(ms -> {
@@ -51,6 +59,7 @@ public class QuanLyThuocTinhApiController {
     }
 
     @DeleteMapping("/mau-sac/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> xoaMauSac(@PathVariable("id") Long id) {
         try {
             mauSacRepository.deleteById(id);
@@ -68,6 +77,7 @@ public class QuanLyThuocTinhApiController {
     }
 
     @PostMapping("/kich-thuoc")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<KichThuoc>> themKichThuoc(@RequestBody Map<String, Object> body) {
         KichThuoc kt = new KichThuoc();
         kt.setKichCo((String) body.get("kichCo"));
@@ -76,6 +86,7 @@ public class QuanLyThuocTinhApiController {
     }
 
     @PutMapping("/kich-thuoc/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<KichThuoc>> capNhatKichThuoc(
             @PathVariable("id") Long id, @RequestBody Map<String, Object> body) {
         return kichThuocRepository.findById(id).map(kt -> {
@@ -86,6 +97,7 @@ public class QuanLyThuocTinhApiController {
     }
 
     @DeleteMapping("/kich-thuoc/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> xoaKichThuoc(@PathVariable("id") Long id) {
         try {
             kichThuocRepository.deleteById(id);
@@ -103,6 +115,7 @@ public class QuanLyThuocTinhApiController {
     }
 
     @PostMapping("/chat-lieu")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<ChatLieu>> themChatLieu(@RequestBody Map<String, String> body) {
         ChatLieu cl = new ChatLieu();
         cl.setTenChatLieu(body.get("tenChatLieu"));
@@ -111,6 +124,7 @@ public class QuanLyThuocTinhApiController {
     }
 
     @PutMapping("/chat-lieu/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<ChatLieu>> capNhatChatLieu(
             @PathVariable("id") Long id, @RequestBody Map<String, String> body) {
         return chatLieuRepository.findById(id).map(cl -> {
@@ -121,6 +135,7 @@ public class QuanLyThuocTinhApiController {
     }
 
     @DeleteMapping("/chat-lieu/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> xoaChatLieu(@PathVariable("id") Long id) {
         try {
             chatLieuRepository.deleteById(id);
@@ -138,6 +153,7 @@ public class QuanLyThuocTinhApiController {
     }
 
     @PostMapping("/danh-muc")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<DanhMuc>> themDanhMuc(@RequestBody DanhMuc danhMuc) {
         try {
             return ResponseEntity.ok(ApiResponse.ok("Thêm danh mục thành công", danhMucRepository.save(danhMuc)));
@@ -147,6 +163,7 @@ public class QuanLyThuocTinhApiController {
     }
 
     @PutMapping("/danh-muc/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<DanhMuc>> capNhatDanhMuc(
             @PathVariable("id") Long id, @RequestBody DanhMuc body) {
         return danhMucRepository.findById(id).map(dm -> {
@@ -160,6 +177,7 @@ public class QuanLyThuocTinhApiController {
     }
 
     @DeleteMapping("/danh-muc/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> xoaDanhMuc(@PathVariable("id") Long id) {
         try {
             danhMucRepository.deleteById(id);
@@ -177,6 +195,7 @@ public class QuanLyThuocTinhApiController {
     }
 
     @PostMapping("/thuong-hieu")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<ThuongHieu>> themThuongHieu(@RequestBody ThuongHieu body) {
         try {
             return ResponseEntity.ok(ApiResponse.ok("Thêm thương hiệu thành công", thuongHieuRepository.save(body)));
@@ -186,6 +205,7 @@ public class QuanLyThuocTinhApiController {
     }
 
     @PutMapping("/thuong-hieu/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<ThuongHieu>> capNhatThuongHieu(
             @PathVariable("id") Long id, @RequestBody ThuongHieu body) {
         return thuongHieuRepository.findById(id).map(th -> {
@@ -197,6 +217,7 @@ public class QuanLyThuocTinhApiController {
     }
 
     @DeleteMapping("/thuong-hieu/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> xoaThuongHieu(@PathVariable("id") Long id) {
         try {
             thuongHieuRepository.deleteById(id);

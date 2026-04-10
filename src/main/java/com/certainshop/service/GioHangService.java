@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -16,9 +16,12 @@ import java.util.Optional;
 @Transactional
 public class GioHangService {
 
-    private final GioHangRepository gioHangRepository;
-    private final GioHangChiTietRepository gioHangChiTietRepository;
-    private final BienTheRepository bienTheRepository;
+    @Autowired
+    private GioHangRepository gioHangRepository;
+    @Autowired
+    private GioHangChiTietRepository gioHangChiTietRepository;
+    @Autowired
+    private BienTheRepository bienTheRepository;
 
     @Value("${app.sanpham.soLuongMuaToiDa:5}")
     private int soLuongMuaToiDa;

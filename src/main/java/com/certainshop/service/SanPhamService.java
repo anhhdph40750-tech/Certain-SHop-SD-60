@@ -10,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -31,15 +31,27 @@ import java.util.UUID;
 @Transactional
 public class SanPhamService {
 
-    private final SanPhamRepository sanPhamRepository;
-    private final BienTheRepository bienTheRepository;
-    private final DanhMucRepository danhMucRepository;
-    private final ThuongHieuRepository thuongHieuRepository;
-    private final KichThuocRepository kichThuocRepository;
-    private final MauSacRepository mauSacRepository;
-    private final ChatLieuRepository chatLieuRepository;
-    private final HinhAnhBienTheRepository hinhAnhBienTheRepository;
-    private final ChiTietDonHangRepository chiTietDonHangRepository;
+    @Autowired
+    private SanPhamRepository sanPhamRepository;
+
+    @Autowired
+    private BienTheRepository bienTheRepository;
+
+    @Autowired
+    private DanhMucRepository danhMucRepository;
+
+    @Autowired
+    private ThuongHieuRepository thuongHieuRepository;
+
+    @Autowired
+    private KichThuocRepository kichThuocRepository;
+
+    @Autowired
+    private MauSacRepository mauSacRepository;
+    @Autowired
+    private ChatLieuRepository chatLieuRepository;
+    @Autowired
+    private HinhAnhBienTheRepository hinhAnhBienTheRepository;
 
     /**
      * Tạo sản phẩm mới cùng biến thể
@@ -70,6 +82,7 @@ public class SanPhamService {
         }
 
         SanPham sanPham = SanPham.builder()
+                .maSanPham("SP_" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
                 .tenSanPham(dto.getTenSanPham())
                 .duongDan(taoDuongDan(dto.getTenSanPham()))
                 .moTa(dto.getMoTaChiTiet())
@@ -422,12 +435,6 @@ public class SanPhamService {
     public void xoaBienThe(Long bienTheId) {
         BienThe bienThe = bienTheRepository.findById(bienTheId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy biến thể"));
-                
-        // Block deletion if variant has orders
-        if (chiTietDonHangRepository.existsByBienTheId(bienTheId)) {
-            throw new RuntimeException("Biến thể đã phát sinh đơn hàng, bạn chỉ có thể tắt");
-        }
-        
         bienThe.setTrangThai(false);
         bienTheRepository.save(bienThe);
     }
@@ -452,7 +459,12 @@ public class SanPhamService {
         BienThe bienThe = bienTheRepository.findById(bienTheId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy biến thể"));
 
-        String tenFile = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        String originalFilename = file.getOriginalFilename();
+        String ext = "";
+        if (originalFilename != null && originalFilename.lastIndexOf(".") > -1) {
+            ext = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+        String tenFile = UUID.randomUUID() + ext;
         Path duongDan = Paths.get(uploadDir).resolve(tenFile);
         Files.createDirectories(duongDan.getParent());
         Files.copy(file.getInputStream(), duongDan, StandardCopyOption.REPLACE_EXISTING);

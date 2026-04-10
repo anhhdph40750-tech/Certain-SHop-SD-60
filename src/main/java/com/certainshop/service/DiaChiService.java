@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 @RequiredArgsConstructor
@@ -21,8 +22,10 @@ import java.util.stream.Collectors;
 @Slf4j
 public class DiaChiService {
 
-    private final DiaChiNguoiDungRepository diaChiRepository;
-    private final NguoiDungRepository nguoiDungRepository;
+    @Autowired
+    private DiaChiNguoiDungRepository diaChiRepository;
+    @Autowired
+    private NguoiDungRepository nguoiDungRepository;
 
     @Transactional(readOnly = true)
     public List<DiaChiNguoiDung> layDanhSachDiaChi(Long nguoiDungId) {
@@ -33,6 +36,9 @@ public class DiaChiService {
     public Optional<DiaChiNguoiDung> layDiaChiMacDinh(Long nguoiDungId) {
         return diaChiRepository.findByNguoiDungIdAndLaMacDinhTrue(nguoiDungId);
     }
+
+    private static final org.slf4j.Logger log
+            = org.slf4j.LoggerFactory.getLogger(DiaChiService.class);
 
     /**
      * Lấy danh sách địa chỉ của khách hàng (dạng DTO)
@@ -59,14 +65,16 @@ public class DiaChiService {
     @Transactional(readOnly = true)
     public Optional<DiaChiChiTietDto> layDiaChiChiTietDto(Long diaChiId, NguoiDung nguoiDung) {
         Optional<DiaChiNguoiDung> diaChi = diaChiRepository.findById(diaChiId);
-        if (diaChi.isEmpty()) return Optional.empty();
-        
+        if (diaChi.isEmpty()) {
+            return Optional.empty();
+        }
+
         // Kiểm tra quyền sở hữu
         if (!diaChi.get().getNguoiDung().getId().equals(nguoiDung.getId())) {
             log.warn("Người dùng {} cố gắng truy cập địa chỉ của người khác", nguoiDung.getId());
             return Optional.empty();
         }
-        
+
         return diaChi.map(this::convertToDto);
     }
 
@@ -76,25 +84,24 @@ public class DiaChiService {
     public DiaChiChiTietDto taoDiaChiDto(NguoiDung nguoiDung, DiaChiChiTietDto dto) {
         // Nếu không có địa chỉ nào, set mặc định
         boolean isFirst = diaChiRepository.findByNguoiDungIdOrderByLaMacDinhDesc(nguoiDung.getId()).isEmpty();
-        
-        DiaChiNguoiDung diaChi = DiaChiNguoiDung.builder()
-                .nguoiDung(nguoiDung)
-                .hoTen(dto.getHoTen())
-                .soDienThoai(dto.getSoDienThoai())
-                .diaChiDong1(dto.getDiaChiDong1())
-                .phuongXa(dto.getPhuongXa())
-                .quanHuyen(dto.getQuanHuyen())
-                .tinhThanh(dto.getTinhThanh())
-                .maTinhGHN(dto.getMaTinhGHN())
-                .maHuyenGHN(dto.getMaHuyenGHN())
-                .maXaGHN(dto.getMaXaGHN())
-                .laMacDinh(isFirst || Boolean.TRUE.equals(dto.getLaMacDinh()))
-                .thoiGianTao(LocalDateTime.now())
-                .build();
-        
+
+        DiaChiNguoiDung diaChi = new DiaChiNguoiDung();
+
+        diaChi.setNguoiDung(nguoiDung);
+        diaChi.setHoTen(dto.getHoTen());
+        diaChi.setSoDienThoai(dto.getSoDienThoai());
+        diaChi.setDiaChiDong1(dto.getDiaChiDong1());
+        diaChi.setPhuongXa(dto.getPhuongXa());
+        diaChi.setQuanHuyen(dto.getQuanHuyen());
+        diaChi.setTinhThanh(dto.getTinhThanh());
+        diaChi.setMaTinhGHN(dto.getMaTinhGHN());
+        diaChi.setMaHuyenGHN(dto.getMaHuyenGHN());
+        diaChi.setMaXaGHN(dto.getMaXaGHN());
+        diaChi.setLaMacDinh(isFirst || Boolean.TRUE.equals(dto.getLaMacDinh()));
+        diaChi.setThoiGianTao(LocalDateTime.now());
         DiaChiNguoiDung saved = diaChiRepository.save(diaChi);
         log.info("Tạo địa chỉ mới cho người dùng {}: {}", nguoiDung.getId(), saved.getId());
-        
+
         return convertToDto(saved);
     }
 
@@ -106,14 +113,14 @@ public class DiaChiService {
         if (existing.isEmpty()) {
             throw new RuntimeException("Địa chỉ không tồn tại");
         }
-        
+
         DiaChiNguoiDung diaChi = existing.get();
-        
+
         // Kiểm tra quyền sở hữu
         if (!diaChi.getNguoiDung().getId().equals(nguoiDung.getId())) {
             throw new RuntimeException("Không có quyền cập nhật địa chỉ này");
         }
-        
+
         // Cập nhật
         diaChi.setHoTen(dto.getHoTen());
         diaChi.setSoDienThoai(dto.getSoDienThoai());
@@ -124,7 +131,7 @@ public class DiaChiService {
         diaChi.setMaTinhGHN(dto.getMaTinhGHN());
         diaChi.setMaHuyenGHN(dto.getMaHuyenGHN());
         diaChi.setMaXaGHN(dto.getMaXaGHN());
-        
+
         // Nếu đặt làm mặc định, bỏ mặc định với các địa chỉ khác
         if (Boolean.TRUE.equals(dto.getLaMacDinh())) {
             diaChiRepository.findByNguoiDungIdAndLaMacDinhTrue(nguoiDung.getId())
@@ -135,10 +142,10 @@ public class DiaChiService {
                     });
             diaChi.setLaMacDinh(true);
         }
-        
+
         diaChi.setThoiGianCapNhat(LocalDateTime.now());
         DiaChiNguoiDung updated = diaChiRepository.save(diaChi);
-        
+
         log.info("Cập nhật địa chỉ {} cho người dùng {}", diaChiId, nguoiDung.getId());
         return convertToDto(updated);
     }
@@ -151,14 +158,14 @@ public class DiaChiService {
         if (existing.isEmpty()) {
             throw new RuntimeException("Địa chỉ không tồn tại");
         }
-        
+
         DiaChiNguoiDung diaChi = existing.get();
-        
+
         // Kiểm tra quyền sở hữu
         if (!diaChi.getNguoiDung().getId().equals(nguoiDung.getId())) {
             throw new RuntimeException("Không có quyền xóa địa chỉ này");
         }
-        
+
         diaChiRepository.deleteById(diaChiId);
         log.info("Xóa địa chỉ {} của người dùng {}", diaChiId, nguoiDung.getId());
     }
@@ -171,30 +178,29 @@ public class DiaChiService {
         if (existing.isEmpty()) {
             throw new RuntimeException("Địa chỉ không tồn tại");
         }
-        
+
         DiaChiNguoiDung diaChi = existing.get();
-        
+
         // Kiểm tra quyền sở hữu
         if (!diaChi.getNguoiDung().getId().equals(nguoiDung.getId())) {
             throw new RuntimeException("Không có quyền cập nhật địa chỉ này");
         }
-        
+
         // Bỏ mặc định với địa chỉ cũ
         diaChiRepository.findByNguoiDungIdAndLaMacDinhTrue(nguoiDung.getId())
                 .ifPresent(d -> {
                     d.setLaMacDinh(false);
                     diaChiRepository.save(d);
                 });
-        
+
         // Đặt mặc định
         diaChi.setLaMacDinh(true);
         diaChiRepository.save(diaChi);
-        
+
         log.info("Đặt địa chỉ {} làm mặc định cho người dùng {}", diaChiId, nguoiDung.getId());
     }
 
     // ===== Methods cũ (giữ lại cho tương thích) =====
-
     public DiaChiNguoiDung themDiaChi(Long nguoiDungId, DiaChiNguoiDung diaChi) {
         NguoiDung nguoiDung = nguoiDungRepository.findById(nguoiDungId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
@@ -274,20 +280,21 @@ public class DiaChiService {
      * Convert entity to DTO
      */
     private DiaChiChiTietDto convertToDto(DiaChiNguoiDung entity) {
-        return DiaChiChiTietDto.builder()
-                .id(entity.getId())
-                .hoTen(entity.getHoTen())
-                .soDienThoai(entity.getSoDienThoai())
-                .diaChiDong1(entity.getDiaChiDong1())
-                .phuongXa(entity.getPhuongXa())
-                .quanHuyen(entity.getQuanHuyen())
-                .tinhThanh(entity.getTinhThanh())
-                .maTinhGHN(entity.getMaTinhGHN())
-                .maHuyenGHN(entity.getMaHuyenGHN())
-                .maXaGHN(entity.getMaXaGHN())
-                .laMacDinh(entity.getLaMacDinh())
-                .thoiGianTao(entity.getThoiGianTao())
-                .build();
+        DiaChiChiTietDto dto = new DiaChiChiTietDto();
+
+        dto.setId(entity.getId());
+        dto.setHoTen(entity.getHoTen());
+        dto.setSoDienThoai(entity.getSoDienThoai());
+        dto.setDiaChiDong1(entity.getDiaChiDong1());
+        dto.setPhuongXa(entity.getPhuongXa());
+        dto.setQuanHuyen(entity.getQuanHuyen());
+        dto.setTinhThanh(entity.getTinhThanh());
+        dto.setMaTinhGHN(entity.getMaTinhGHN());
+        dto.setMaHuyenGHN(entity.getMaHuyenGHN());
+        dto.setMaXaGHN(entity.getMaXaGHN());
+        dto.setLaMacDinh(entity.getLaMacDinh());
+        dto.setThoiGianTao(entity.getThoiGianTao());
+
+        return dto;
     }
 }
-

@@ -5,9 +5,8 @@ import com.certainshop.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -16,10 +15,17 @@ import java.util.*;
 @Transactional(readOnly = true)
 public class ThongKeService {
 
-    private final DonHangRepository donHangRepository;
-    private final BienTheRepository bienTheRepository;
-    private final ChiTietDonHangRepository chiTietDonHangRepository;
-    private final NguoiDungRepository nguoiDungRepository;
+    @Autowired
+    private DonHangRepository donHangRepository;
+
+    @Autowired
+    private BienTheRepository bienTheRepository;
+
+    @Autowired
+    private ChiTietDonHangRepository chiTietDonHangRepository;
+
+    @Autowired
+    private NguoiDungRepository nguoiDungRepository;
 
     /**
      * Tổng quan dashboard
@@ -79,30 +85,9 @@ public class ThongKeService {
      * Sản phẩm bán chạy trong 1 tháng gần nhất
      */
     public List<Object[]> sanPhamBanChay() {
-        LocalDateTime tuNgay = LocalDate.now()
-                .withDayOfMonth(1)
-                .atStartOfDay();
-
-        LocalDateTime denNgay = tuNgay.plusMonths(1);
-
-        return chiTietDonHangRepository.thongKeSanPhamBanChay(tuNgay, denNgay);
+        LocalDateTime tuNgay = LocalDateTime.now().minusMonths(1);
+        return chiTietDonHangRepository.thongKeSanPhamBanChay(tuNgay);
     }
-
-
-//    public List<Object[]> sanPhamBanChay() {
-//
-//        LocalDateTime tuNgay = LocalDate.now()
-//                .withDayOfMonth(1)
-//                .minusMonths(2)   // lùi 2 tháng
-//                .atStartOfDay();
-//
-//        LocalDateTime denNgay = LocalDate.now()
-//                .withDayOfMonth(1)
-//                .plusMonths(1)    // đầu tháng sau
-//                .atStartOfDay();
-//
-//        return chiTietDonHangRepository.thongKeSanPhamBanChay(tuNgay, denNgay);
-//    }
 
     /**
      * Tổng doanh thu

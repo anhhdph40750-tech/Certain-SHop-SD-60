@@ -13,7 +13,7 @@ import java.util.List;
 public class ExcelHelper {
 
     public static String TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-    public static final String[] HEADERS = {"Mã SP", "Tên SP", "Giá Gốc", "Giá Bán", "Danh Mục (ID)", "Thương Hiệu (ID)", "Kích Thước (ID)", "Màu Sắc (ID)", "Giá Biến Thể", "Số Lượng Tồn"};
+    public static String[] HEADERS = {"Mã SP", "Tên SP", "Giá Gốc", "Giá Bán", "Danh Mục (ID)", "Thương Hiệu (ID)", "Kích Thước (ID)", "Màu Sắc (ID)", "Giá Biến Thể", "Số Lượng Tồn"};
     public static String SHEET = "Sản Phẩm";
 
     public static boolean hasExcelFormat(MultipartFile file) {

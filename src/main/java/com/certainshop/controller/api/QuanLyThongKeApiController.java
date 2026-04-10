@@ -12,14 +12,16 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/api/quan-ly/thong-ke")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN','NHAN_VIEN')")
+@PreAuthorize("hasAnyRole('ADMIN','NHAN_VIEN', 'SUPER_ADMIN')")
 public class QuanLyThongKeApiController {
 
-    private final ThongKeService thongKeService;
+    @Autowired
+    private ThongKeService thongKeService;
 
     @GetMapping("/tong-quan")
     public ResponseEntity<ApiResponse<Map<String, Object>>> tongQuan() {

@@ -22,4 +22,46 @@ public class KichThuoc {
 
     @Column(name = "ThuTu")
     private Integer thuTu = 0;
+
+    /**
+     * @return the id
+     */
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    /**
+     * @return the kichCo
+     */
+    public String getKichCo() {
+        return kichCo;
+    }
+
+    /**
+     * @param kichCo the kichCo to set
+     */
+    public void setKichCo(String kichCo) {
+        this.kichCo = kichCo;
+    }
+
+    /**
+     * @return the thuTu
+     */
+    public Integer getThuTu() {
+        return thuTu;
+    }
+
+    /**
+     * @param thuTu the thuTu to set
+     */
+    public void setThuTu(Integer thuTu) {
+        this.thuTu = thuTu;
+    }
 }

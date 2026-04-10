@@ -15,15 +15,18 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Controller
 @RequestMapping("/quan-ly/khuyen-mai")
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN')")
 public class KhuyenMaiQLController {
-
-    private final KhuyenMaiService khuyenMaiService;
-    private final KhuyenMaiRepository khuyenMaiRepository;
+    
+    @Autowired
+    private KhuyenMaiService khuyenMaiService;
+    @Autowired
+    private KhuyenMaiRepository khuyenMaiRepository;
 
     @GetMapping
     public String danhSach(

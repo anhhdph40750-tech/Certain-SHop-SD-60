@@ -6,6 +6,7 @@ import com.certainshop.repository.NguoiDungRepository;
 import com.certainshop.repository.VaiTroRepository;
 import com.certainshop.service.NguoiDungService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,14 +19,17 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequiredArgsConstructor
 public class NguoiDungQLController {
 
-    private final NguoiDungService nguoiDungService;
-    private final NguoiDungRepository nguoiDungRepository;
-    private final VaiTroRepository vaiTroRepository;
+    @Autowired
+    private  NguoiDungService nguoiDungService;
+    @Autowired
+    private  NguoiDungRepository nguoiDungRepository;
+    @Autowired
+    private  VaiTroRepository vaiTroRepository;
 
     // ===== QUẢN LÝ KHÁCH HÀNG (ADMIN + NHÂN VIÊN XEM) =====
 
     @GetMapping("/quan-ly/nguoi-dung")
-    @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN', 'SUPER_ADMIN')")
     public String danhSachKhachHang(
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "0") int trang,
@@ -41,7 +45,7 @@ public class NguoiDungQLController {
     }
 
     @GetMapping("/quan-ly/nguoi-dung/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN', 'SUPER_ADMIN')")
     public String chiTietKhachHang(@PathVariable Long id, Model model) {
         NguoiDung nd = nguoiDungRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
@@ -50,11 +54,15 @@ public class NguoiDungQLController {
     }
 
     @PostMapping("/quan-ly/nguoi-dung/{id}/doi-trang-thai")
-    @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN', 'SUPER_ADMIN')")
     public String doiTrangThaiKhachHang(@PathVariable Long id, RedirectAttributes ra) {
         try {
             NguoiDung nd = nguoiDungRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+            if (VaiTroConst.SUPER_ADMIN.equals(nd.getVaiTro().getTenVaiTro())) {
+                ra.addFlashAttribute("loiThongBao", "Không thể thay đổi trạng thái của Super Admin");
+                return "redirect:/quan-ly/nguoi-dung/" + id;
+            }
             nguoiDungService.doiTrangThaiTaiKhoan(id, !Boolean.TRUE.equals(nd.getDangHoatDong()));
             ra.addFlashAttribute("thanhCong", "Đã thay đổi trạng thái tài khoản");
         } catch (Exception e) {
@@ -66,7 +74,7 @@ public class NguoiDungQLController {
     // ===== QUẢN LÝ NHÂN VIÊN (CHỈ ADMIN) =====
 
     @GetMapping("/admin/nhan-vien")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public String danhSachNhanVien(
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "0") int trang,
@@ -82,14 +90,14 @@ public class NguoiDungQLController {
     }
 
     @GetMapping("/admin/nhan-vien/them")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public String hienThiThemNhanVien(Model model) {
         model.addAttribute("nguoiDung", new NguoiDung());
         return "quan-ly/nguoi-dung/them-nhan-vien";
     }
 
     @PostMapping("/admin/nhan-vien/them")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public String xuLyThemNhanVien(
             @RequestParam String hoTen,
             @RequestParam String email,
@@ -112,12 +120,18 @@ public class NguoiDungQLController {
     }
 
     @PostMapping("/admin/nhan-vien/{id}/doi-vai-tro")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public String doiVaiTro(
             @PathVariable Long id,
             @RequestParam Integer vaiTroId,
             RedirectAttributes ra) {
         try {
+            NguoiDung nd = nguoiDungRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+            if (VaiTroConst.SUPER_ADMIN.equals(nd.getVaiTro().getTenVaiTro())) {
+                ra.addFlashAttribute("loiThongBao", "Không thể thay đổi vai trò của Super Admin");
+                return "redirect:/quan-ly/nguoi-dung/" + id;
+            }
             nguoiDungService.doiVaiTro(id, vaiTroId);
             ra.addFlashAttribute("thanhCong", "Đã thay đổi vai trò thành công");
         } catch (Exception e) {
@@ -127,11 +141,15 @@ public class NguoiDungQLController {
     }
 
     @PostMapping("/admin/nhan-vien/{id}/doi-trang-thai")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public String doiTrangThaiNhanVien(@PathVariable Long id, RedirectAttributes ra) {
         try {
             NguoiDung nd = nguoiDungRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+            if (VaiTroConst.SUPER_ADMIN.equals(nd.getVaiTro().getTenVaiTro())) {
+                ra.addFlashAttribute("loiThongBao", "Không thể thay đổi trạng thái của Super Admin");
+                return "redirect:/admin/nhan-vien";
+            }
             nguoiDungService.doiTrangThaiTaiKhoan(id, !Boolean.TRUE.equals(nd.getDangHoatDong()));
             ra.addFlashAttribute("thanhCong", "Đã thay đổi trạng thái tài khoản");
         } catch (Exception e) {

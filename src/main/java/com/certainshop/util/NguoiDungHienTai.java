@@ -8,12 +8,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Component
 @RequiredArgsConstructor
 public class NguoiDungHienTai {
-
-    private final NguoiDungRepository nguoiDungRepository;
+    
+    @Autowired
+    private NguoiDungRepository nguoiDungRepository;
 
     public Optional<NguoiDung> lay() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

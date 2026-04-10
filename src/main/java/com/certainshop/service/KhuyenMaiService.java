@@ -7,7 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,7 +18,8 @@ import java.util.Optional;
 @Transactional
 public class KhuyenMaiService {
 
-    private final KhuyenMaiRepository khuyenMaiRepository;
+    @Autowired
+    private KhuyenMaiRepository khuyenMaiRepository;
 
     public KhuyenMai taoKhuyenMai(KhuyenMai khuyenMai) {
         if (khuyenMaiRepository.existsByMaKhuyenMai(khuyenMai.getMaKhuyenMai())) {

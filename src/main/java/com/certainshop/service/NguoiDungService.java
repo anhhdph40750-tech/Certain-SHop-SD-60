@@ -16,7 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -26,12 +26,18 @@ import java.util.Optional;
 @Transactional
 public class NguoiDungService {
 
-    private final NguoiDungRepository nguoiDungRepository;
-    private final VaiTroRepository vaiTroRepository;
-    private final GioHangRepository gioHangRepository;
-    private final DiaChiNguoiDungRepository diaChiNguoiDungRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final MailService mailService;
+    @Autowired
+    private NguoiDungRepository nguoiDungRepository;
+    @Autowired
+    private VaiTroRepository vaiTroRepository;
+    @Autowired
+    private GioHangRepository gioHangRepository;
+    @Autowired
+    private DiaChiNguoiDungRepository diaChiNguoiDungRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private MailService mailService;
 
     /**
      *      * Đăng ký tài khoản khách hàng mới

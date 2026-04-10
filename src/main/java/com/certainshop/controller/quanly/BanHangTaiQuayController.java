@@ -20,20 +20,28 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Controller
 @RequestMapping("/quan-ly/ban-hang")
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN')")
 public class BanHangTaiQuayController {
-
-    private final DonHangService donHangService;
-    private final SanPhamService sanPhamService;
-    private final KhuyenMaiService khuyenMaiService;
-    private final DonHangRepository donHangRepository;
-    private final NguoiDungHienTai nguoiDungHienTai;
-    private final BienTheRepository bienTheRepository;
-    private final KhuyenMaiRepository khuyenMaiRepository;
+    
+    @Autowired
+    private  DonHangService donHangService;
+    @Autowired
+    private SanPhamService sanPhamService;
+    @Autowired
+    private KhuyenMaiService khuyenMaiService;
+    @Autowired
+    private  DonHangRepository donHangRepository;
+    @Autowired
+    private NguoiDungHienTai nguoiDungHienTai;
+    @Autowired
+    private BienTheRepository bienTheRepository;
+    @Autowired
+    private KhuyenMaiRepository khuyenMaiRepository;
 
     @GetMapping
     public String trangBanHang(Model model) {

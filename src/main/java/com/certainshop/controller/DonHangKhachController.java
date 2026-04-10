@@ -18,15 +18,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Controller
 @Slf4j
 @RequiredArgsConstructor
 public class DonHangKhachController {
 
-    private final DonHangService donHangService;
-    private final NguoiDungHienTai nguoiDungHienTai;
-    private final VNPayUtil vnPayUtil;
+    @Autowired
+    private DonHangService donHangService;
+    @Autowired
+    private NguoiDungHienTai nguoiDungHienTai;
+    @Autowired
+    private VNPayUtil vnPayUtil;
 
     @Value("${app.fe.url:http://localhost:5173}")
     private String feUrl;
@@ -102,7 +106,7 @@ public class DonHangKhachController {
         boolean chuKyHopLe = vnPayUtil.xacThucChuKy(params);
 
         if (!chuKyHopLe) {
-            log.warn("VNPay callback chữ ký không hợp lệ cho đơn: {}", maDonHang);
+            //log.warn("VNPay callback chữ ký không hợp lệ cho đơn: {}", maDonHang);
             ra.addFlashAttribute("loiThongBao", "Xác thực thanh toán thất bại");
             return "redirect:" + feUrl + "/don-hang-cua-toi";
         }
@@ -115,7 +119,7 @@ public class DonHangKhachController {
                         "Thanh toán thành công! Mã giao dịch: " + maGiaoDich);
                 return "redirect:" + feUrl + "/don-hang-cua-toi/" + donHang.getMaDonHang();
             } catch (Exception e) {
-                log.error("Lỗi xác nhận VNPay: {}", e.getMessage());
+                //log.error("Lỗi xác nhận VNPay: {}", e.getMessage());
                 ra.addFlashAttribute("loiThongBao", "Lỗi xử lý thanh toán: " + e.getMessage());
                 return "redirect:" + feUrl + "/don-hang-cua-toi";
             }

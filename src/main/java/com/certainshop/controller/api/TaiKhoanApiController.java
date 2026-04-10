@@ -14,14 +14,17 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/api/tai-khoan")
 @RequiredArgsConstructor
 public class TaiKhoanApiController {
 
-    private final NguoiDungService nguoiDungService;
-    private final DiaChiService diaChiService;
+    @Autowired
+    private NguoiDungService nguoiDungService;
+    @Autowired
+    private DiaChiService diaChiService;
 
     private NguoiDung getNguoiDung(UserDetails userDetails) {
         return nguoiDungService.timTheoTenDangNhap(userDetails.getUsername())

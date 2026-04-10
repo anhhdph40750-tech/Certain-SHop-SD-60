@@ -13,13 +13,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/api/voucher")
 @RequiredArgsConstructor
 public class VoucherApiController {
 
-    private final VoucherService voucherService;
+    @Autowired
+    private VoucherService voucherService;
 
     /**
      * Danh sách voucher hoạt động (public - for customers to see active vouchers only)
@@ -34,7 +36,7 @@ public class VoucherApiController {
      * Admin/Staff: Danh sách TẤT CẢ vouchers (bao gồm hết hạn, inactive)
      */
     @GetMapping("/all")
-    @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<Voucher>>> danhSachTatCa() {
         List<Voucher> vouchers = voucherService.danhSachChoAdmin();
         return ResponseEntity.ok(ApiResponse.ok("Danh sách tất cả vouchers", vouchers));
@@ -44,7 +46,7 @@ public class VoucherApiController {
      * Admin/Staff: Tạo voucher mới
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Voucher>> taoVoucher(@RequestBody Voucher voucher) {
         try {
             Voucher created = voucherService.taoVoucher(voucher);
@@ -58,7 +60,7 @@ public class VoucherApiController {
      * Admin/Staff: Cập nhật voucher
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Voucher>> capNhatVoucher(
             @PathVariable("id") Long id, @RequestBody Voucher updates) {
         try {
@@ -73,7 +75,7 @@ public class VoucherApiController {
      * Admin/Staff: Xóa voucher (soft delete)
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> xoaVoucher(@PathVariable("id") Long id) {
         try {
             voucherService.xoaVoucher(id);

@@ -4,6 +4,7 @@ import com.certainshop.dto.DangKyDto;
 import com.certainshop.service.NguoiDungService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -14,7 +15,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequiredArgsConstructor
 public class XacThucController {
 
-    private final NguoiDungService nguoiDungService;
+    @Autowired
+    private NguoiDungService nguoiDungService;
 
     @GetMapping("/dang-nhap")
     public String hienThiDangNhap(

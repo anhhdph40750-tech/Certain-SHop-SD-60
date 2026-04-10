@@ -16,14 +16,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/api/gio-hang")
 @RequiredArgsConstructor
 public class GioHangApiController {
 
-    private final GioHangService gioHangService;
-    private final NguoiDungRepository nguoiDungRepository;
+    @Autowired
+    private GioHangService gioHangService;
+    @Autowired
+    private NguoiDungRepository nguoiDungRepository;
 
     @GetMapping
     public ResponseEntity<?> layGioHang(Authentication auth) {

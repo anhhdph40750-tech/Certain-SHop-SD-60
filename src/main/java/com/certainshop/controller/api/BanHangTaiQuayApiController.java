@@ -16,21 +16,30 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/api/quan-ly/ban-hang")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'NHAN_VIEN', 'SUPER_ADMIN')")
 public class BanHangTaiQuayApiController {
 
-    private final DonHangService donHangService;
-    private final DonHangRepository donHangRepository;
-    private final BienTheRepository bienTheRepository;
-    private final NguoiDungHienTai nguoiDungHienTai;
-    private final NguoiDungRepository nguoiDungRepository;
-    private final KhuyenMaiRepository khuyenMaiRepository;
-    private final VoucherService voucherService;
-    private final MailService mailService;
+    @Autowired
+    private DonHangService donHangService;
+    @Autowired
+    private DonHangRepository donHangRepository;
+    @Autowired
+    private BienTheRepository bienTheRepository;
+    @Autowired
+    private NguoiDungHienTai nguoiDungHienTai;
+    @Autowired
+    private NguoiDungRepository nguoiDungRepository;
+    @Autowired
+    private KhuyenMaiRepository khuyenMaiRepository;
+    @Autowired
+    private VoucherService voucherService;
+    @Autowired
+    private MailService mailService;
 
     /**
      * Lấy danh sách hóa đơn chờ (tất cả nhân viên)
